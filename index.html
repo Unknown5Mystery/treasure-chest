@@ -156,10 +156,29 @@ body {
             <span>Unknown</span>
             <span>Mystery</span>
         </div>
+        
+<div class="tagline" id="random-quote"></div>
 
-        <div class="tagline">
-            Treasure Chest — everything worth keeping, all in one place.
-        </div>
+<script>
+    const quotes = [
+        "Just keep swimming.",
+        "The sea lives in every one of us.",
+        "At sea, I learned how little a person needs, not how much.",
+        "Swim on.",
+        "Go with the flow.",
+        "Stay afloat.",
+        "Keep your fins up.",
+        "Find your current.",
+        "Follow the tide.",
+        "Make waves.",
+        "Keep moving with the current.",
+        "Dive in.",
+        "Never stop swimming."
+    ];
+
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    document.getElementById("random-quote").textContent = randomQuote;
+</script>
 
         <a class="open-chest-btn" href="resource.html">
 
