@@ -32,7 +32,16 @@
     --shadow: 0 10px 35px rgba(0,0,0,.20);
 
     --brand-yellow: #fef200;
+    --brand-yellow-rgb: 254, 242, 0;
+    --white: #ffffff;
     --brand-font: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+
+    /* Ocean blue, matched in brightness/saturation to the green
+       placeholder it replaced so it reads just as easy on the eyes
+       against the dark background. */
+    --wave-color-1: #0d3348;
+    --wave-color-2: #145f80;
+    --wave-color-3: #2098c4;
 }
 
 * {
@@ -60,9 +69,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    overflow: hidden;
 }
 
 .landing {
+    position: relative;
+    z-index: 1;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -100,12 +114,45 @@ body {
 .tagline {
     max-width: 380px;
 
-    margin-top: -6px;
-
-    color: var(--muted);
-
     font-size: 13px;
     line-height: 1.6;
+
+    /* Reserves space for one line so the typewriter effect below
+       (typed in, held, backspaced out) never shifts layout as the
+       text grows and shrinks. */
+    min-height: 1.6em;
+
+    color: var(--brand-yellow);
+}
+
+.quote-cursor {
+    display: inline-block;
+
+    width: 2px;
+    height: 1em;
+
+    margin-left: 2px;
+    vertical-align: -0.15em;
+
+    background: var(--brand-yellow);
+}
+
+/* Blinks continuously — while typing, while backspacing, and during
+   the hold in between. The class is added once by the JS below. */
+.quote-cursor.blinking {
+    animation: cursorBlink 1s linear infinite;
+}
+
+@keyframes cursorBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quote-cursor.blinking {
+        animation: none;
+        opacity: 1;
+    }
 }
 
 .open-chest-btn {
@@ -117,10 +164,10 @@ body {
 
     padding: 0 22px;
 
-    border: 1px solid var(--dark);
+    border: 1px solid var(--white);
     border-radius: 11px;
 
-    background: var(--dark);
+    background: var(--white);
     color: var(--dark-text);
 
     font-size: 12px;
@@ -129,11 +176,13 @@ body {
     text-decoration: none;
     white-space: nowrap;
 
-    transition: background .15s ease, transform .15s ease;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
 }
 
 .open-chest-btn:hover {
-    background: #ffffff;
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: var(--dark-text);
     transform: translateY(-1px);
 }
 
@@ -141,6 +190,139 @@ body {
     width: 15px;
     height: 15px;
 }
+
+
+/* ============================================================
+   WATER WAVES
+   A looping band pinned to the bottom of the screen, under the
+   button. Each layer is one SVG wave shape drawn twice side by
+   side (2400 wide inside a viewBox = two 1200-wide tiles), sitting
+   in an element twice the container's width; animating it exactly
+   -50% shifts it by one whole tile, so it loops with no visible
+   seam. Three layers at different speeds/opacity/heights give it
+   a bit of depth instead of one flat sheet moving in lockstep.
+============================================================ */
+
+.waves {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 200px;
+
+    overflow: hidden;
+
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* A plain, unanimated strip in the front wave's own color, sitting
+   behind all three layers at the very bottom edge. Every layer's
+   bob (below) occasionally lifts it a few pixels off the container's
+   true bottom, which would otherwise flash a gap of raw page
+   background through the seam; this "floor" is tall enough to cover
+   the largest possible bob (see randomizeWaves' amplitude range) so
+   that gap always reads as more water instead of the black page
+   behind it. It stays fully hidden at rest, since the front layer's
+   own fill already reaches well past this depth on its own. */
+.waves-floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 20px;
+
+    background: var(--wave-color-3);
+}
+
+/* Wraps each wave-layer so the horizontal scroll (below) and this
+   slow, gentle vertical bob can run as two independent transform
+   animations — one per element — instead of fighting over the same
+   "transform" property on a single element. The randomizeWaves()
+   script sets --bob-duration/--bob-delay/--bob-amount per layer, so
+   the three don't drift up and down in lockstep either. */
+.wave-wrap {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    animation-name: waveBob;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-duration: var(--bob-duration, 6s);
+    animation-delay: var(--bob-delay, 0s);
+}
+
+@keyframes waveBob {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(var(--bob-amount, -6px));
+    }
+}
+
+.wave-layer {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+
+    width: 200%;
+    height: 100%;
+
+    display: block;
+
+    animation-name: waveScroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+/* Each layer's box height also controls how high its crest can reach —
+   a shorter box physically can't paint above its own top edge, no
+   matter what's drawn inside it. So the FARTHEST layer gets the
+   TALLEST box (it should read as reaching up high in the distance)
+   and the NEAREST layer gets the SHORTEST box (it sits low and solid
+   in front) — that's what keeps all three visible at once instead of
+   the nearest one painting over the other two. */
+.wave-back {
+    height: 100%;
+    opacity: .5;
+    animation-duration: 16s;
+}
+
+.wave-mid {
+    height: 72%;
+    opacity: .75;
+    animation-duration: 11s;
+    animation-direction: reverse;
+}
+
+.wave-front {
+    height: 48%;
+    opacity: 1;
+    animation-duration: 8s;
+}
+
+.wave-back path { fill: var(--wave-color-1); }
+.wave-mid path { fill: var(--wave-color-2); }
+.wave-front path { fill: var(--wave-color-3); }
+
+@keyframes waveScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wave-layer, .wave-wrap {
+        animation: none;
+    }
+}
+
+
 </style>
 </head>
 <body>
@@ -156,29 +338,6 @@ body {
             <span>Unknown</span>
             <span>Mystery</span>
         </div>
-        
-<div class="tagline" id="random-quote"></div>
-
-<script>
-    const quotes = [
-        "Just keep swimming.",
-        "The sea lives in every one of us.",
-        "At sea, I learned how little a person needs, not how much.",
-        "Swim on.",
-        "Go with the flow.",
-        "Stay afloat.",
-        "Keep your fins up.",
-        "Find your current.",
-        "Follow the tide.",
-        "Make waves.",
-        "Keep moving with the current.",
-        "Dive in.",
-        "Never stop swimming."
-    ];
-
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    document.getElementById("random-quote").textContent = randomQuote;
-</script>
 
         <a class="open-chest-btn" href="resource.html">
 
@@ -199,7 +358,177 @@ body {
 
         </a>
 
+<div class="tagline" id="random-quote"><span id="quote-text"></span><span class="quote-cursor" aria-hidden="true"></span></div>
+
+<script>
+    const quotes = [
+        "Just keep swimming.",
+        "The sea lives in every one of us.",
+        "At sea, I learned how little a person needs, not how much.",
+        "Swim on.",
+        "Go with the flow.",
+        "Stay afloat.",
+        "Keep your fins up.",
+        "Find your current.",
+        "Follow the tide.",
+        "Make waves.",
+        "Keep moving with the current.",
+        "Dive in.",
+        "Never stop swimming."
+    ];
+
+    const quoteTextEl = document.getElementById("quote-text");
+    const cursorEl = document.querySelector(".quote-cursor");
+
+    let quoteIndex = Math.floor(Math.random() * quotes.length);
+
+    const prefersReducedMotion =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+
+        // No typing/backspacing animation — just show a line, in the
+        // same solid yellow, with a steady (non-blinking) cursor.
+        quoteTextEl.textContent = quotes[quoteIndex];
+
+    } else {
+
+        const TYPE_MS = 120;    // per character, typing in (100 WPM)
+        const DELETE_MS = 68;   // per character, backspacing out (a bit snappier, still human)
+        const HOLD_MS = 3000;   // how long the finished line sits before erasing
+
+        // Blinks continuously the whole time — typing, backspacing, and
+        // the hold in between.
+        cursorEl.classList.add("blinking");
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function typeOut(text) {
+            for (let i = 1; i <= text.length; i++) {
+                quoteTextEl.textContent = text.slice(0, i);
+                await wait(TYPE_MS);
+            }
+        }
+
+        async function backspaceOut(text) {
+            for (let i = text.length; i >= 0; i--) {
+                quoteTextEl.textContent = text.slice(0, i);
+                await wait(DELETE_MS);
+            }
+        }
+
+        function pickNextIndex() {
+            if (quotes.length <= 1) {
+                return quoteIndex;
+            }
+            let idx = Math.floor(Math.random() * quotes.length);
+            while (idx === quoteIndex) {
+                idx = Math.floor(Math.random() * quotes.length);
+            }
+            return idx;
+        }
+
+        // Type a quote in, hold it for a beat, backspace it out, pick a
+        // new (different) one, and repeat — forever. Always the same
+        // solid yellow, no fading.
+        (async function typewriterLoop() {
+            for (;;) {
+                const text = quotes[quoteIndex];
+                await typeOut(text);
+                await wait(HOLD_MS);
+                await backspaceOut(text);
+                quoteIndex = pickNextIndex();
+            }
+        })();
+
+    }
+</script>
+
     </div>
+
+    <div class="waves" aria-hidden="true">
+
+        <div class="waves-floor"></div>
+
+        <div class="wave-wrap">
+            <svg class="wave-layer wave-back" viewBox="0 0 2400 120" preserveAspectRatio="none">
+                <path d="M0,40 C150,90 350,0 600,40 C850,80 1050,0 1200,40 L1200,120 L0,120 Z"></path>
+                <path d="M0,40 C150,90 350,0 600,40 C850,80 1050,0 1200,40 L1200,120 L0,120 Z" transform="translate(1200,0)"></path>
+            </svg>
+        </div>
+
+        <div class="wave-wrap">
+            <svg class="wave-layer wave-mid" viewBox="0 0 2400 120" preserveAspectRatio="none">
+                <path d="M0,55 C200,10 400,90 600,50 C800,10 1000,90 1200,55 L1200,120 L0,120 Z"></path>
+                <path d="M0,55 C200,10 400,90 600,50 C800,10 1000,90 1200,55 L1200,120 L0,120 Z" transform="translate(1200,0)"></path>
+            </svg>
+        </div>
+
+        <div class="wave-wrap">
+            <svg class="wave-layer wave-front" viewBox="0 0 2400 120" preserveAspectRatio="none">
+                <path d="M0,60 C180,20 420,95 600,55 C780,15 1020,95 1200,60 L1200,120 L0,120 Z"></path>
+                <path d="M0,60 C180,20 420,95 600,55 C780,15 1020,95 1200,60 L1200,120 L0,120 Z" transform="translate(1200,0)"></path>
+            </svg>
+        </div>
+
+    </div>
+
+    <script>
+        // Gives each wave layer its own randomized speed, starting
+        // phase, and a slight independent vertical bob, so the loop
+        // doesn't look identical on every page load or fall into an
+        // obviously mechanical, perfectly-synced rhythm across the
+        // three layers.
+        (function randomizeWaves() {
+
+            const baseScrollDuration = {
+                "wave-back": 16,
+                "wave-mid": 11,
+                "wave-front": 8
+            };
+
+            document.querySelectorAll(".wave-layer").forEach(svg => {
+
+                const key =
+                    svg.classList.contains("wave-back") ? "wave-back" :
+                    svg.classList.contains("wave-mid") ? "wave-mid" :
+                    "wave-front";
+
+                const base = baseScrollDuration[key];
+
+                // ±18% off the base speed, and a random starting point
+                // within that loop (a negative delay drops the
+                // animation in already-in-progress at a random spot).
+                const duration = base * (0.82 + Math.random() * 0.36);
+                const startOffset = Math.random() * duration;
+
+                svg.style.animationDuration = duration.toFixed(2) + "s";
+                svg.style.animationDelay = "-" + startOffset.toFixed(2) + "s";
+
+            });
+
+            document.querySelectorAll(".wave-wrap").forEach(wrap => {
+
+                const bobDuration = 5 + Math.random() * 5;
+                const bobDelay = Math.random() * bobDuration;
+                // Always rise from rest, never dip down: a layer's resting
+                // position is already its shortest state (that's what keeps
+                // the layer behind it visible above it by design), so any
+                // downward bob would shrink it further and expose a gap
+                // where the layer behind shows through underneath. Bobbing
+                // only upward means it can cover more of what's behind but
+                // never less.
+                const bobAmount = -(4 + Math.random() * 7);
+
+                wrap.style.setProperty("--bob-duration", bobDuration.toFixed(2) + "s");
+                wrap.style.setProperty("--bob-delay", "-" + bobDelay.toFixed(2) + "s");
+                wrap.style.setProperty("--bob-amount", bobAmount.toFixed(1) + "px");
+
+            });
+
+        })();
+    </script>
+
 
 </body>
 </html>
