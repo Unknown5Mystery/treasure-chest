@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resources — Treasure Chest</title>
+<title>Treasure Chest Resources</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,10 +93,15 @@ button {
     margin-bottom: 6px;
 }
 
-.header-actions {
+.brand-group {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
+    gap: 16px;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
     gap: 8px;
 }
 
@@ -117,18 +122,18 @@ button {
 }
 
 .home-btn {
-    height: 24px;
+    height: 32px;
 
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
 
-    padding: 0 10px;
+    padding: 0 12px;
 
     border: 1px solid var(--border);
-    border-radius: 7px;
+    border-radius: 9px;
 
-    background: transparent;
+    background: var(--surface);
     color: var(--muted);
 
     font-size: 10px;
@@ -138,18 +143,20 @@ button {
     white-space: nowrap;
 
     transition:
+        background .15s ease,
         color .15s ease,
         border-color .15s ease;
 }
 
 .home-btn:hover {
-    color: var(--text);
-    border-color: var(--muted);
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
 }
 
 .home-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
 }
 
 .brand {
@@ -209,7 +216,9 @@ button {
 }
 
 .add-resource-btn:hover {
-    background: #ffffff;
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: var(--dark-text);
 }
 
 .add-resource-btn svg {
@@ -225,12 +234,27 @@ button {
 .dashboard-tabs {
     display: flex;
     align-items: flex-end;
-    gap: 4px;
+    justify-content: space-between;
+    gap: 16px;
 
     margin-top: 18px;
     margin-bottom: 30px;
 
     border-bottom: 1px solid var(--border);
+}
+
+.dashboard-tabs-list {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.dashboard-tabs-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 8px;
 }
 
 .dashboard-tab {
@@ -265,7 +289,7 @@ button {
 
 .dashboard-tab.active {
     background: var(--surface);
-    color: var(--text);
+    color: var(--brand-yellow);
 
     border: 1px solid var(--border);
     border-bottom-color: var(--surface);
@@ -479,6 +503,11 @@ h1 {
     background: var(--surface-soft);
 }
 
+.search-input.has-query {
+    border-color: var(--brand-yellow);
+    box-shadow: 0 0 0 3px rgba(254, 242, 0, .18);
+}
+
 .tool-button {
     height: 40px;
 
@@ -507,8 +536,8 @@ h1 {
 
 .tool-button:hover {
     background: var(--surface-hover);
-    border-color: #343733;
-    color: var(--text);
+    border-color: var(--brand-yellow);
+    color: var(--brand-yellow);
 }
 
 .tool-button.active {
@@ -602,7 +631,7 @@ h1 {
 
 .clear-icon-btn:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .clear-icon-btn svg {
@@ -700,7 +729,7 @@ h1 {
 
 .option:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .option-category {
@@ -761,7 +790,7 @@ h1 {
 
 .small-button:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 
@@ -789,6 +818,54 @@ h1 {
 
 .category:last-child {
     margin-bottom: 0;
+}
+
+/* A soft glass-shine band that loops continuously while a search is
+   active — including on collapsed categories, whose header strip is
+   its whole surface. It runs on a real-world clock rather than restarting
+   at 0% on every keystroke: each render sets --shine-delay to a negative
+   offset equal to how far into the loop the shine should already be
+   (see searchShineStartTime in the script), so a category re-rendered
+   mid-sweep keeps sweeping instead of visibly snapping back to the start. */
+.category-searching::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        100deg,
+        transparent 35%,
+        rgba(255, 255, 255, .10) 46%,
+        rgba(254, 242, 0, .32) 50%,
+        rgba(255, 255, 255, .10) 54%,
+        transparent 65%
+    );
+    background-size: 250% 100%;
+    background-position: 150% 0;
+
+    pointer-events: none;
+
+    animation: categorySearchSweep 5s ease-in-out infinite;
+    animation-delay: var(--shine-delay, 0s);
+}
+
+@keyframes categorySearchSweep {
+    0%, 25% {
+        background-position: 150% 0;
+        opacity: 0;
+    }
+    35% {
+        opacity: 1;
+    }
+    58% {
+        background-position: -50% 0;
+        opacity: 1;
+    }
+    68%, 100% {
+        background-position: -50% 0;
+        opacity: 0;
+    }
 }
 
 .category:not(:last-child)::after {
@@ -840,6 +917,10 @@ h1 {
 }
 
 .move-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
     width: 100%;
 
     padding: 8px 9px;
@@ -858,7 +939,15 @@ h1 {
 
 .move-row:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
+}
+
+/* Fill the row yellow while it's loading, with a white spinner ring so
+   it stays visible against the yellow background. */
+.move-row.loading,
+.move-row.loading:hover {
+    background: var(--brand-yellow);
+    color: var(--dark-text);
 }
 
 .move-row:disabled {
@@ -949,7 +1038,7 @@ h1 {
 
 .autocomplete-option:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .autocomplete-empty {
@@ -1018,7 +1107,7 @@ h1 {
 }
 
 .tag-chip-remove:hover {
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .tag-input-box input {
@@ -1079,6 +1168,15 @@ h1 {
     z-index: 30;
 }
 
+/* The category card clips its own contents to its rounded corners
+   (for the search shine, the collapse, etc.), but that same clipping
+   was cutting off the bottom of the Sort dropdown whenever a category
+   was too short to contain it — most obviously now that the dropdown
+   also holds the list/stacked view controls. Let it escape while open. */
+.category:has(.sort-menu.open) {
+    overflow: visible;
+}
+
 .category-glow-yellow {
     box-shadow:
         0 0 0 2px var(--brand-yellow),
@@ -1123,7 +1221,7 @@ h1 {
 }
 
 .category-toggle:hover {
-    color: var(--text);
+    color: var(--brand-yellow);
     background: var(--surface-hover);
 }
 
@@ -1148,6 +1246,14 @@ h1 {
     min-width: 0;
 }
 
+.category-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 3px;
+}
+
 .category-name {
     margin-bottom: 3px;
 
@@ -1157,6 +1263,39 @@ h1 {
     text-transform: uppercase;
 
     transition: color .2s ease;
+}
+
+.inline-name-btn {
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    background: var(--surface-soft);
+    color: var(--muted);
+
+    transition:
+        color .15s ease,
+        border-color .15s ease;
+}
+
+.inline-name-btn:hover {
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
+.inline-name-btn svg {
+    width: 11px;
+    height: 11px;
 }
 
 .category-count {
@@ -1191,7 +1330,8 @@ h1 {
 
 .category-sort:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
 }
 
 .category-sort:disabled {
@@ -1236,7 +1376,7 @@ h1 {
 
 .category-icon-btn:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .category-icon-btn.active {
@@ -1282,7 +1422,7 @@ h1 {
 
     z-index: 50;
 
-    width: 170px;
+    width: 200px;
 
     padding: 5px;
 
@@ -1296,6 +1436,112 @@ h1 {
 }
 
 .sort-menu.open {
+    display: block;
+}
+
+.settings-wrap {
+    position: relative;
+}
+
+.settings-btn {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: transparent;
+    color: var(--muted);
+
+    transition:
+        background .15s ease,
+        color .15s ease,
+        border-color .15s ease;
+}
+
+.settings-btn:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
+.settings-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.settings-btn.loading {
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
+.settings-btn.loading svg {
+    animation: settingsGearSpin 2s linear infinite;
+}
+
+@keyframes settingsGearSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.import-spinner {
+    display: none;
+    flex-shrink: 0;
+
+    width: 12px;
+    height: 12px;
+
+    border: 2px solid rgba(22, 23, 21, 0.25);
+    border-top-color: var(--dark-text);
+    border-radius: 50%;
+
+    animation: importSpinnerSpin 0.9s linear infinite;
+}
+
+.loading .import-spinner {
+    display: inline-block;
+}
+
+@keyframes importSpinnerSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.settings-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+
+    z-index: 50;
+
+    width: 190px;
+
+    padding: 5px;
+
+    display: none;
+
+    background: #181918;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    box-shadow: var(--shadow);
+}
+
+.settings-menu.open {
     display: block;
 }
 
@@ -1323,7 +1569,7 @@ h1 {
 
 .sort-row:hover {
     background: var(--surface-hover);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .sort-row.active {
@@ -1374,12 +1620,80 @@ h1 {
     padding: 12px;
 }
 
+.cards.cards-stacked {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+}
+
 .category.collapsed .cards {
     display: none;
 }
 
 .cards.cards-empty {
     display: block;
+}
+
+
+/* ============================================================
+   VIEW TOGGLE (list / stacked)
+   Lives inside the category's Sort dropdown.
+============================================================ */
+
+.view-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 4px 3px 6px;
+}
+
+.view-toggle {
+    display: flex;
+    align-items: stretch;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    overflow: hidden;
+}
+
+.view-toggle-btn {
+    flex: 1;
+    height: 26px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    border: none;
+    background: var(--surface);
+    color: var(--muted);
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .02em;
+
+    transition: background .15s ease, color .15s ease;
+}
+
+.view-toggle-btn + .view-toggle-btn {
+    border-left: 1px solid var(--border);
+}
+
+.view-toggle-btn:hover {
+    color: var(--brand-yellow);
+}
+
+.view-toggle-btn.active {
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+}
+
+.view-toggle-btn svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
 }
 
 .category-empty-note {
@@ -1416,6 +1730,13 @@ h1 {
         0 0 18px rgba(254,242,0,.3);
 
     transition: box-shadow .25s ease;
+}
+
+/* Persistent (not a flash) marker for cards added by an import still in
+   progress — stays until the whole import flow is dismissed. */
+.card-import-highlight {
+    border-color: var(--brand-yellow);
+    box-shadow: 0 0 0 1px var(--brand-yellow);
 }
 
 .card-top {
@@ -1515,7 +1836,7 @@ h1 {
 
 .edit-btn:hover {
     background: var(--surface-soft);
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .edit-btn svg {
@@ -1609,6 +1930,12 @@ h1 {
     margin-top: 14px;
 }
 
+.card-bottom-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .copy-btn {
     height: 31px;
 
@@ -1632,7 +1959,9 @@ h1 {
 }
 
 .copy-btn:hover {
-    background: #ffffff;
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: var(--dark-text);
 }
 
 .copy-btn.copied {
@@ -1644,6 +1973,73 @@ h1 {
 .copy-btn svg {
     width: 11px;
     height: 11px;
+}
+
+.preview-btn {
+    position: relative;
+
+    height: 31px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 0 11px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--muted);
+
+    font-size: 9px;
+    font-weight: 750;
+
+    transition: color .15s ease, border-color .15s ease;
+}
+
+.preview-btn:hover {
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
+.preview-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.preview-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+
+    max-width: 240px;
+
+    padding: 6px 10px;
+    border-radius: 6px;
+
+    background: var(--dark);
+    color: var(--dark-text);
+
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity .15s ease, transform .15s ease;
+
+    z-index: 20;
+}
+
+.preview-btn:hover .preview-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 .more-btn {
@@ -1663,7 +2059,7 @@ h1 {
 }
 
 .more-btn:hover {
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .more-btn svg {
@@ -1726,6 +2122,14 @@ h1 {
     display: flex;
 }
 
+#confirmModal {
+    /* Confirm dialogs can open on top of another already-open modal
+       (e.g. confirming a delete from inside the Unused or Edit Category
+       modal) — keep it above every other modal-backdrop regardless of
+       DOM order so its buttons are always clickable. */
+    z-index: 300;
+}
+
 .modal {
     width: min(560px, 100%);
 
@@ -1770,6 +2174,12 @@ h1 {
     font-weight: 800;
 }
 
+.modal-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .modal-close {
     width: 29px;
     height: 29px;
@@ -1786,7 +2196,7 @@ h1 {
 }
 
 .modal-close:hover {
-    color: var(--text);
+    color: var(--brand-yellow);
 }
 
 .modal-close svg {
@@ -1843,6 +2253,21 @@ h1 {
     border-color: #3a3d38;
 }
 
+.field-error {
+    display: none;
+
+    margin-top: 6px;
+
+    color: #ff8f87;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.field-error.visible {
+    display: block;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -1852,39 +2277,57 @@ h1 {
 }
 
 .modal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
     height: 34px;
 
     padding: 0 12px;
 
-    border: 1px solid var(--border);
+    border: 1px solid #ffffff;
     border-radius: 8px;
 
-    background: var(--surface-soft);
-    color: var(--muted);
+    background: #ffffff;
+    color: var(--dark-text);
 
     font-size: 9px;
     font-weight: 750;
 }
 
 .modal-button:hover {
-    background: var(--surface-hover);
-    color: var(--text);
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+    border-color: var(--brand-yellow);
 }
 
 .modal-button.primary {
-    background: #e9e9e4;
-    color: #161715;
-    border-color: #e9e9e4;
+    background: #2f6b45;
+    color: #d9f7e3;
+    border-color: #2f6b45;
 }
 
 .modal-button.primary:hover {
-    background: #ffffff;
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+    border-color: var(--brand-yellow);
 }
 
-.modal-button.primary.copied {
+.modal-button.copied {
     background: var(--brand-yellow);
     border-color: var(--brand-yellow);
     color: var(--dark-text);
+}
+
+/* Fill the button yellow while it's loading (its own dedicated state,
+   not just the hover fill), with a white spinner ring so it stays
+   visible against the yellow background. */
+.modal-button.loading,
+.modal-button.loading:hover {
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+    border-color: var(--brand-yellow);
 }
 
 .modal-button.danger {
@@ -1965,8 +2408,8 @@ h1 {
 
 .tag-chip-add:hover {
     background: var(--surface-hover);
-    color: var(--text);
-    border-color: #3a3d38;
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
 }
 
 .edit-tags-empty {
@@ -2023,6 +2466,7 @@ h1 {
 
 .unused-row:hover {
     background: var(--surface-hover);
+    box-shadow: inset 2px 0 0 var(--brand-yellow);
 }
 
 .unused-row-label {
@@ -2042,13 +2486,192 @@ h1 {
     white-space: nowrap;
 }
 
+.unused-row-sub {
+    color: var(--muted);
+    font-weight: 700;
+}
+
 .unused-checkbox {
     flex-shrink: 0;
+    margin: 0;
 
     width: 14px;
     height: 14px;
 
     accent-color: var(--brand-yellow);
+}
+
+.collision-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    margin-top: 4px;
+}
+
+.collision-columns-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    /* Now that the headers live inside .inline-move-options, its own
+       4px padding already applies once to this row like any other
+       child — this only needs to add .collision-row's own 7px inset
+       so the header text lines up directly above the row content. */
+    padding: 2px 7px 8px;
+
+    margin-bottom: 3px;
+    border-bottom: 1px solid var(--border);
+
+    color: var(--muted);
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.collision-columns-spacer {
+    flex-shrink: 0;
+    width: 14px;
+}
+
+.collision-columns-spacer-arrow {
+    flex-shrink: 0;
+    width: 20px;
+}
+
+.collision-columns-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.collision-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.top-toast {
+    position: relative;
+
+    max-height: 0;
+    overflow: hidden;
+
+    margin-bottom: 0;
+    padding: 0 36px;
+
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+
+    border-radius: var(--radius);
+
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1;
+
+    opacity: 0;
+
+    transition: max-height .25s ease, opacity .2s ease, margin-bottom .25s ease, padding .25s ease;
+}
+
+.top-toast.visible {
+    max-height: 60px;
+    margin-bottom: 14px;
+    padding: 12px 36px;
+
+    opacity: 1;
+}
+
+.top-toast-close {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+    color: var(--dark-text);
+
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1;
+
+    opacity: .55;
+    cursor: pointer;
+
+    transition: opacity .15s ease;
+}
+
+.top-toast-close:hover {
+    opacity: 1;
+}
+
+.collision-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 8px 7px;
+    border-radius: 6px;
+}
+
+.collision-row:hover {
+    background: var(--surface-hover);
+    box-shadow: inset 2px 0 0 var(--brand-yellow);
+}
+
+.collision-side {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--text);
+
+    font-size: 11px;
+    font-weight: 700;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.collision-side-sub {
+    display: block;
+
+    margin-top: 2px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+    font-weight: 600;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.collision-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 20px;
+
+    color: var(--soft);
+
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
 }
 
 
@@ -2181,18 +2804,32 @@ h1 {
         grid-template-columns: 1fr;
     }
 
+    .cards.cards-stacked {
+        grid-template-columns: 1fr;
+    }
+
 }
 
 
 @media (max-width: 560px) {
 
     .dashboard-tabs {
-        overflow-x: auto;
-        scrollbar-width: none;
+        flex-wrap: wrap;
     }
 
-    .dashboard-tabs::-webkit-scrollbar {
+    .dashboard-tabs-list {
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex: 1 1 100%;
+    }
+
+    .dashboard-tabs-list::-webkit-scrollbar {
         display: none;
+    }
+
+    .logo-area {
+        flex-wrap: wrap;
+        row-gap: 10px;
     }
 
     .dashboard-tab {
@@ -2239,6 +2876,8 @@ h1 {
 
     <div class="logo-area">
 
+      <div class="brand-group">
+
         <div class="brand">
 
             <img
@@ -2254,58 +2893,120 @@ h1 {
         </div>
 
 
-        <div class="header-actions">
+        <a class="home-btn" href="index.html">
 
-            <div class="header-actions-row">
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
 
-                <button
-                    class="add-resource-btn secondary"
-                    id="viewUnusedButton">
+                <path d="M3 11l9-8 9 8"></path>
+                <path d="M5 10v10h14V10"></path>
 
-                    View unused
+            </svg>
 
-                </button>
+            Home
 
-                <button
-                    class="add-resource-btn"
-                    id="addResourceButton">
+        </a>
 
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2">
+      </div>
 
-                        <path d="M12 5v14"></path>
-                        <path d="M5 12h14"></path>
 
-                    </svg>
+      <div class="top-actions">
 
-                    Add resource
+        <button
+            class="add-resource-btn"
+            id="addResourceButton">
 
-                </button>
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
 
-            </div>
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
 
-            <a class="home-btn" href="index.html">
+            </svg>
 
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2">
+            Add resource
 
-                    <path d="M3 11l9-8 9 8"></path>
-                    <path d="M5 10v10h14V10"></path>
+        </button>
 
-                </svg>
 
-                Home
+      <div class="settings-wrap" data-action="noop">
 
-            </a>
+        <button
+            class="settings-btn"
+            id="settingsButton"
+            title="Settings">
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8">
+
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+
+            </svg>
+
+        </button>
+
+
+        <div class="settings-menu" id="settingsMenu">
+
+            <button
+                type="button"
+                class="move-row"
+                id="viewUnusedButton">
+                View unused resources
+            </button>
+
+            <div class="move-menu-divider"></div>
+
+            <button
+                type="button"
+                class="move-row"
+                id="importBackupOption">
+                <span class="import-spinner" aria-hidden="true"></span>
+                <span id="importBackupOptionLabel">Import a backup</span>
+            </button>
+
+            <button
+                type="button"
+                class="move-row"
+                id="exportBackupOption">
+                Export all resources
+            </button>
 
         </div>
 
+
+        <input
+            type="file"
+            id="backupFileInput"
+            accept=".xlsx"
+            style="display:none">
+
+      </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="top-toast" id="topToast">
+        <span id="topToastText"></span>
+        <button
+            type="button"
+            class="top-toast-close"
+            id="topToastClose"
+            aria-label="Dismiss message">
+            &times;
+        </button>
     </div>
 
 
@@ -2314,6 +3015,8 @@ h1 {
     ======================================================= -->
 
     <nav class="dashboard-tabs">
+
+      <div class="dashboard-tabs-list">
 
         <button
             class="dashboard-tab active"
@@ -2455,6 +3158,8 @@ h1 {
             Notes
 
         </button>
+
+      </div>
 
     </nav>
 
@@ -2770,11 +3475,43 @@ h1 {
                     Edit resource
                 </div>
 
-                <h2
-                    class="modal-title"
-                    id="editModalTitle">
-                    Edit resource
-                </h2>
+                <div class="modal-title-row">
+
+                    <h2
+                        class="modal-title"
+                        id="editModalTitle">
+                        Edit resource
+                    </h2>
+
+                    <button
+                        type="button"
+                        class="inline-name-btn"
+                        title="Duplicate"
+                        id="editModalDuplicateButton">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8">
+
+                            <rect
+                                x="9"
+                                y="9"
+                                width="12"
+                                height="12"
+                                rx="2">
+                            </rect>
+
+                            <path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                            </path>
+
+                        </svg>
+
+                    </button>
+
+                </div>
 
             </div>
 
@@ -3261,7 +3998,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button primary"
+                class="modal-button"
                 id="detailsCopy">
                 Copy link
             </button>
@@ -3609,19 +4346,30 @@ h1 {
         </div>
 
 
-        <div class="modal-actions">
+        <div class="modal-actions modal-actions-split">
 
             <button
                 class="modal-button"
-                data-close-modal="addResourceModal">
-                Cancel
+                id="addResourceImportButton">
+                <span class="import-spinner" aria-hidden="true"></span>
+                <span id="addResourceImportLabel">Import</span>
             </button>
 
-            <button
-                class="modal-button primary"
-                id="saveAddResource">
-                Add resource
-            </button>
+            <div class="modal-actions-right">
+
+                <button
+                    class="modal-button"
+                    data-close-modal="addResourceModal">
+                    Cancel
+                </button>
+
+                <button
+                    class="modal-button primary"
+                    id="saveAddResource">
+                    Add resource
+                </button>
+
+            </div>
 
         </div>
 
@@ -3712,6 +4460,100 @@ h1 {
                 class="modal-button primary"
                 id="duplicateLinkAddAnyway">
                 Add anyway
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     DUPLICATE RESOURCE MODAL
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="duplicateResourceModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Duplicate
+                </div>
+
+                <h2
+                    class="modal-title"
+                    id="duplicateResourceTitle">
+                    Duplicate card
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="duplicateResourceClose">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div
+            class="confirm-message"
+            id="duplicateResourceIntro">
+        </div>
+
+
+        <div class="modal-field">
+
+            <label class="modal-label">
+                New resource link
+            </label>
+
+            <input
+                id="duplicateResourceUrl"
+                class="modal-input"
+                type="text"
+                autocomplete="off"
+                placeholder="https://">
+
+            <div
+                class="field-error"
+                id="duplicateResourceUrlError">
+            </div>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="modal-button"
+                id="duplicateResourceCancel">
+                Cancel
+            </button>
+
+            <button
+                class="modal-button primary"
+                id="duplicateResourceCreate">
+                Create duplicate
             </button>
 
         </div>
@@ -3845,7 +4687,7 @@ h1 {
                 </div>
 
                 <h2 class="modal-title">
-                    Unused categories &amp; tags
+                    Unused links, tags &amp; categories
                 </h2>
 
             </div>
@@ -3888,12 +4730,12 @@ h1 {
         <div class="modal-field">
 
             <label class="modal-label">
-                Unused categories
+                Links never copied
             </label>
 
             <div
                 class="inline-move-options"
-                id="unusedCategoriesList">
+                id="unusedLinksList">
             </div>
 
         </div>
@@ -3908,6 +4750,20 @@ h1 {
             <div
                 class="inline-move-options"
                 id="unusedTagsList">
+            </div>
+
+        </div>
+
+
+        <div class="modal-field">
+
+            <label class="modal-label">
+                Unused categories
+            </label>
+
+            <div
+                class="inline-move-options"
+                id="unusedCategoriesList">
             </div>
 
         </div>
@@ -3933,6 +4789,341 @@ h1 {
 
 </div>
 
+
+<!-- ==========================================================
+     LINK COLLISION MODAL (import: same link, different name)
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="linkCollisionModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Import
+                </div>
+
+                <h2
+                    class="modal-title"
+                    id="linkCollisionTitle">
+                    These links already exist with a different name
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="linkCollisionClose">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div
+            class="confirm-message"
+            id="linkCollisionMessage">
+        </div>
+
+
+        <div class="modal-actions modal-actions-split">
+
+            <button
+                class="modal-button danger"
+                id="linkCollisionCancel">
+                Don't add
+            </button>
+
+            <div class="modal-actions-right">
+
+                <button
+                    class="modal-button"
+                    id="linkCollisionAddAnyway">
+                    Add anyways
+                </button>
+
+                <button
+                    class="modal-button primary"
+                    id="linkCollisionReviewOpen">
+                    Review now
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     LINK COLLISION REVIEW MODAL
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="linkCollisionReviewModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Import
+                </div>
+
+                <h2 class="modal-title">
+                    Review matching links
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="linkCollisionReviewClose">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div class="collision-toolbar">
+
+            <label class="unused-select-all-label">
+
+                <input
+                    type="checkbox"
+                    id="linkCollisionSelectAll">
+
+                Select all
+
+            </label>
+
+        </div>
+
+
+        <div class="inline-move-options">
+
+            <div class="collision-columns-label">
+                <span class="collision-columns-spacer" aria-hidden="true"></span>
+                <span class="collision-columns-col">Existing link</span>
+                <span class="collision-columns-spacer-arrow" aria-hidden="true"></span>
+                <span class="collision-columns-col">From import</span>
+            </div>
+
+            <div
+                class="collision-rows"
+                id="linkCollisionList">
+            </div>
+
+        </div>
+
+
+        <div class="modal-actions modal-actions-split">
+
+            <button
+                class="modal-button"
+                id="linkCollisionReviewGoBack">
+                Go back
+            </button>
+
+            <button
+                class="modal-button primary"
+                id="linkCollisionAddSelected">
+                Add selected
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     SKIPPED DUPLICATES SUMMARY MODAL (import: exact match)
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="skippedDuplicatesModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Import
+                </div>
+
+                <h2
+                    class="modal-title"
+                    id="skippedDuplicatesTitle">
+                    Some cards already exist
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="skippedDuplicatesClose">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="modal-button"
+                id="skippedDuplicatesOkay">
+                Okay, thanks
+            </button>
+
+            <button
+                class="modal-button primary"
+                id="skippedDuplicatesReviewOpen">
+                Review skipped cards
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     SKIPPED DUPLICATES REVIEW MODAL
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="skippedDuplicatesReviewModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Import
+                </div>
+
+                <h2 class="modal-title">
+                    Skipped cards
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="skippedDuplicatesReviewClose">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div class="unused-toolbar">
+
+            <label class="unused-select-all-label">
+
+                <input
+                    type="checkbox"
+                    id="skippedDuplicatesSelectAll">
+
+                Select all
+
+            </label>
+
+        </div>
+
+
+        <div
+            class="inline-move-options"
+            id="skippedDuplicatesList">
+        </div>
+
+
+        <div class="modal-actions modal-actions-split">
+
+            <button
+                class="modal-button"
+                id="skippedDuplicatesReviewGoBack">
+                Go back
+            </button>
+
+            <button
+                class="modal-button primary"
+                id="skippedDuplicatesAddSelected">
+                Add selected
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
 
@@ -3974,7 +5165,8 @@ function saveDashboardData() {
             JSON.stringify({
                 resources,
                 sort: state.sort,
-                tagRegistry: state.tagRegistry
+                tagRegistry: state.tagRegistry,
+                categoryView: state.categoryView
             })
         );
 
@@ -4053,6 +5245,15 @@ const state = {
         savedDashboardData &&
         savedDashboardData.sort
             ? savedDashboardData.sort
+            : {},
+
+    // Per-category display mode: { [category]: { mode: "list" | "stacked" } }.
+    // "list" (one full card per row) is the default when a category has
+    // no entry here yet; "stacked" is always 2 cards side by side.
+    categoryView:
+        savedDashboardData &&
+        savedDashboardData.categoryView
+            ? savedDashboardData.categoryView
             : {},
 
     tagRegistry:
@@ -4481,6 +5682,17 @@ function getUnusedTags() {
 }
 
 
+function getNeverCopiedLinks() {
+
+    return resources.filter(
+        resource =>
+            !resource.uses ||
+            resource.uses.length === 0
+    );
+
+}
+
+
 /* ============================================================
    SEARCH + FILTERS
 ============================================================ */
@@ -4684,10 +5896,15 @@ function createCard(resource) {
             : "";
 
 
+    const importHighlightClass =
+        importHighlightedResourceIds.has(resource.id)
+            ? " card-import-highlight"
+            : "";
+
     return `
 
         <article
-            class="card"
+            class="card${importHighlightClass}"
             data-resource-id="${resource.id}">
 
             <div class="card-top">
@@ -4706,6 +5923,34 @@ function createCard(resource) {
 
 
                 <div class="card-icon-actions">
+
+                    <button
+                        class="edit-btn"
+                        title="Duplicate"
+                        data-action="duplicate"
+                        data-id="${resource.id}">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8">
+
+                            <rect
+                                x="9"
+                                y="9"
+                                width="12"
+                                height="12"
+                                rx="2">
+                            </rect>
+
+                            <path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                            </path>
+
+                        </svg>
+
+                    </button>
 
                     <button
                         class="edit-btn"
@@ -4742,36 +5987,75 @@ function createCard(resource) {
 
             <div class="card-bottom">
 
-                <button
-                    class="copy-btn"
-                    data-action="copy"
-                    data-id="${resource.id}">
+                <div class="card-bottom-left">
 
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8">
+                    <button
+                        class="copy-btn"
+                        data-action="copy"
+                        data-id="${resource.id}">
 
-                        <rect
-                            x="9"
-                            y="9"
-                            width="10"
-                            height="10"
-                            rx="2">
-                        </rect>
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8">
 
-                        <path
-                            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
-                        </path>
+                            <rect
+                                x="9"
+                                y="9"
+                                width="10"
+                                height="10"
+                                rx="2">
+                            </rect>
 
-                    </svg>
+                            <path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                            </path>
 
-                    <span>
-                        Copy
-                    </span>
+                        </svg>
 
-                </button>
+                        <span>
+                            Copy
+                        </span>
+
+                    </button>
+
+
+                    <button
+                        class="preview-btn"
+                        data-action="noop"
+                        data-url="${escapeHTML(resource.url)}"
+                        title="${escapeHTML(resource.url)}">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8">
+
+                            <path
+                                d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z">
+                            </path>
+
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="3">
+                            </circle>
+
+                        </svg>
+
+                        <span>
+                            Preview
+                        </span>
+
+                        <span class="preview-tooltip">
+                            ${escapeHTML(resource.url)}
+                        </span>
+
+                    </button>
+
+                </div>
 
 
                 <button
@@ -4859,6 +6143,31 @@ function createCategory(
         categoryResources.length;
 
 
+    // With only one link there's nothing to arrange, so the list/stacked
+    // toggle is hidden entirely and the category just always renders in
+    // list mode — it only shows up once there's a real choice to make.
+    const canChooseView =
+        resourceCount >= 2;
+
+    const viewSetting =
+        state.categoryView[category] ||
+        { mode: "list" };
+
+    const viewMode =
+        canChooseView && viewSetting.mode === "stacked"
+            ? "stacked"
+            : "list";
+
+
+    const isSearching =
+        !!(state.search && state.search.trim());
+
+    const shineDelayMs =
+        isSearching && searchShineStartTime
+            ? -((Date.now() - searchShineStartTime) % SEARCH_SHINE_DURATION_MS)
+            : 0;
+
+
     const expanded =
         state.expandedCategories.includes(
             category
@@ -4879,7 +6188,9 @@ function createCategory(
                 category
                 ${expanded ? "" : "collapsed"}
                 ${isGenuinelyEmpty ? "category-empty" : ""}
+                ${isSearching ? "category-searching" : ""}
             "
+            ${isSearching ? `style="--shine-delay: ${shineDelayMs}ms;"` : ""}
             data-category="${escapeHTML(
                 category
             )}">
@@ -4935,6 +6246,27 @@ function createCategory(
 
 
                 <div class="category-actions">
+
+                    <button
+                        class="edit-btn"
+                        title="Add resource to this category"
+                        data-action="quick-add-resource"
+                        data-category="${escapeHTML(
+                            category
+                        )}">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+
+                        </svg>
+
+                    </button>
 
                     <button
                         class="edit-btn"
@@ -4999,6 +6331,69 @@ function createCategory(
                         data-sort-menu="${escapeHTML(
                             category
                         )}">
+
+                        ${
+                            canChooseView
+                                ? `
+                                    <div class="view-section">
+
+                                        <div class="view-toggle">
+
+                                            <button
+                                                class="view-toggle-btn ${viewMode === "list" ? "active" : ""}"
+                                                data-action="set-category-view"
+                                                data-view-mode="list"
+                                                data-category="${escapeHTML(category)}">
+
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="2">
+
+                                                    <path d="M4 6h16"></path>
+                                                    <path d="M4 12h16"></path>
+                                                    <path d="M4 18h16"></path>
+
+                                                </svg>
+
+                                                List
+
+                                            </button>
+
+                                            <button
+                                                class="view-toggle-btn ${viewMode === "stacked" ? "active" : ""}"
+                                                data-action="set-category-view"
+                                                data-view-mode="stacked"
+                                                data-category="${escapeHTML(category)}">
+
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    stroke-width="2">
+
+                                                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                                                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                                                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                                                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+
+                                                </svg>
+
+                                                Stacked
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="move-menu-divider"></div>
+                                `
+                                : ""
+                        }
+
 
                         <button
                             class="sort-row ${addedActive ? "active" : ""}"
@@ -5108,7 +6503,9 @@ function createCategory(
             </div>
 
 
-            <div class="cards ${sortedResources.length ? "" : "cards-empty"}">
+            <div
+                class="cards ${sortedResources.length ? "" : "cards-empty"} ${viewMode === "stacked" ? "cards-stacked" : ""}"
+                data-cards-category="${escapeHTML(category)}">
 
                 ${
                     sortedResources.length
@@ -5554,14 +6951,37 @@ document
    SEARCH
 ============================================================ */
 
+// The matching-category shine (.category-searching) runs on this real
+// clock rather than restarting every keystroke — see createCategory()
+// and categorySearchSweep for how it's used.
+const SEARCH_SHINE_DURATION_MS = 5000;
+let searchShineStartTime = null;
+
 document
     .getElementById("searchInput")
     .addEventListener(
         "input",
         event => {
 
+            const wasSearching =
+                state.search.trim().length > 0;
+
             state.search =
                 event.target.value;
+
+            const isSearching =
+                state.search.trim().length > 0;
+
+            if (isSearching && !wasSearching) {
+                searchShineStartTime = Date.now();
+            } else if (!isSearching) {
+                searchShineStartTime = null;
+            }
+
+            event.target.classList.toggle(
+                "has-query",
+                isSearching
+            );
 
 
             populateFilterUI();
@@ -5579,7 +6999,7 @@ function closeAllDropdowns() {
 
     document
         .querySelectorAll(
-            ".dropdown, .sort-menu, .move-menu, .autocomplete-list"
+            ".dropdown, .sort-menu, .move-menu, .autocomplete-list, .settings-menu"
         )
         .forEach(
             menu =>
@@ -5778,6 +7198,1372 @@ document
 
         }
     );
+
+
+document
+    .getElementById("settingsButton")
+    .addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+
+            const menu =
+                document.getElementById(
+                    "settingsMenu"
+                );
+
+
+            const wasOpen =
+                menu.classList.contains(
+                    "open"
+                );
+
+
+            closeAllDropdowns();
+
+
+            if (!wasOpen) {
+
+                menu.classList.add(
+                    "open"
+                );
+
+            }
+
+        }
+    );
+
+
+/* ============================================================
+   BACKUP: EXPORT / IMPORT
+============================================================ */
+
+function exportResourcesToExcel() {
+
+    const rows =
+        resources.map(
+            resource => ({
+                Category: resource.category,
+                Name: resource.name,
+                URL: resource.url,
+                Tags: resource.tags.join(", "),
+                Description: resource.description || ""
+            })
+        );
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(rows, {
+            header: ["Category", "Name", "URL", "Tags", "Description"]
+        });
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Resources"
+    );
+
+    const dateStamp =
+        new Date().toISOString().slice(0, 10);
+
+    XLSX.writeFile(
+        workbook,
+        `treasure-chest-backup-${dateStamp}.xlsx`
+    );
+
+    showExportSummaryToast(rows.length);
+
+}
+
+
+function downloadBlankBackupTemplate() {
+
+    const worksheet =
+        XLSX.utils.json_to_sheet([], {
+            header: ["Category", "Name", "URL", "Tags", "Description"]
+        });
+
+    const workbook =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Resources"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        "treasure-chest-backup-template.xlsx"
+    );
+
+}
+
+
+function getBackupField(row, ...names) {
+
+    const key =
+        Object.keys(row).find(
+            k => names.includes(k.trim().toLowerCase())
+        );
+
+    return key ? String(row[key]).trim() : "";
+
+}
+
+
+function importBackupFromWorkbook(file) {
+
+    const reader = new FileReader();
+
+    reader.onload = event => {
+
+        let workbook;
+
+        try {
+
+            workbook =
+                XLSX.read(
+                    event.target.result,
+                    { type: "array" }
+                );
+
+        } catch (e) {
+
+            alert(
+                "That file couldn't be read as a backup. Make sure it's the .xlsx file from Backup > Export all resources."
+            );
+
+            return;
+
+        }
+
+
+        const firstSheetName =
+            workbook.SheetNames[0];
+
+        const sheet =
+            workbook.Sheets[firstSheetName];
+
+        const rows =
+            XLSX.utils.sheet_to_json(
+                sheet,
+                { defval: "" }
+            );
+
+
+        if (!rows.length) {
+
+            alert(
+                "That backup file doesn't have any rows to import."
+            );
+
+            return;
+
+        }
+
+
+        const importedResources =
+            rows
+                .map(row => {
+
+                    const name =
+                        getBackupField(row, "name");
+
+                    const url =
+                        getBackupField(row, "url", "link");
+
+                    if (!name || !url) {
+                        return null;
+                    }
+
+                    const category =
+                        getBackupField(row, "category") || "Misc";
+
+                    const tagsRaw =
+                        getBackupField(row, "tags");
+
+                    const tags =
+                        tagsRaw
+                            ? tagsRaw
+                                .split(",")
+                                .map(t => t.trim())
+                                .filter(Boolean)
+                            : [];
+
+                    const description =
+                        getBackupField(row, "description", "desc");
+
+                    return { name, url, category, tags, description };
+
+                })
+                .filter(Boolean);
+
+
+        if (!importedResources.length) {
+
+            openConfirmModal(
+                "Excel format invalid",
+                "This file doesn't match the backup format Treasure Chest expects (it needs at least Name and URL columns). Download a blank template to fill in and import?",
+                "Yes, please",
+                () => {
+                    downloadBlankBackupTemplate();
+                },
+                {
+                    cancelLabel: "No, thanks",
+                    variant: "primary"
+                }
+            );
+
+            return;
+
+        }
+
+
+        processImportedResources(importedResources);
+
+    };
+
+    reader.readAsArrayBuffer(file);
+
+}
+
+
+/* ============================================================
+   IMPORT MERGE LOGIC
+
+   Importing never replaces what's already there — it only adds.
+   Each imported row is classified against the CURRENT resources
+   (including ones this same import has already added, so an
+   import file with its own internal repeats behaves the same way
+   as repeats against existing cards):
+
+     - name AND link both match an existing card  -> exact duplicate,
+       skipped (not added). Collected for a post-import summary the
+       person can review and force-add (renumbered) if they want.
+     - link matches but the name is different      -> held back for a
+       three-way prompt (Cancel / Review now / Add anyways), since
+       this is the ambiguous case.
+     - name matches but the link is different       -> not a real
+       conflict, just a naming collision: added right away, renumbered
+       the same way the card "Duplicate" feature does (existing
+       becomes "X 1", the new one becomes "X 2").
+     - no match at all                              -> added right
+       away, matched into an existing category case-insensitively
+       when one exists.
+============================================================ */
+
+let pendingLinkCollisions = [];
+let selectedLinkCollisions = new Set();
+
+let pendingSkippedDuplicates = [];
+let selectedSkippedDuplicates = new Set();
+
+// Cards added by the import get a yellow border (see
+// .card-import-highlight) for 3 seconds after they're added.
+let importHighlightedResourceIds = new Set();
+let importHighlightClearTimer = null;
+
+// Running tallies for the import operation in progress — it can span
+// several prompts, so these accumulate until the whole flow is done,
+// at which point one summary toast reports the totals.
+let importSessionAdded = 0;
+let importSessionSkipped = 0;
+let topToastTimer = null;
+
+
+function isAnyImportModalOpen() {
+
+    return [
+        "linkCollisionModal",
+        "linkCollisionReviewModal",
+        "skippedDuplicatesModal",
+        "skippedDuplicatesReviewModal"
+    ].some(
+        id =>
+            document
+                .getElementById(id)
+                .classList.contains("open")
+    );
+
+}
+
+
+function scheduleImportHighlightClear() {
+
+    clearTimeout(importHighlightClearTimer);
+
+    importHighlightClearTimer = setTimeout(
+        () => {
+
+            importHighlightedResourceIds.clear();
+            render();
+
+        },
+        3000
+    );
+
+}
+
+
+// Shared top-of-screen toast used for both the import and export
+// summary messages — a yellow banner that slides open between the
+// Home link and the Resources tabs, then closes itself after a beat.
+function showTopToast(message) {
+
+    document.getElementById(
+        "topToastText"
+    ).textContent =
+        message;
+
+    const toast =
+        document.getElementById("topToast");
+
+    toast.classList.add("visible");
+
+    clearTimeout(topToastTimer);
+
+    topToastTimer =
+        setTimeout(
+            () => toast.classList.remove("visible"),
+            9000
+        );
+
+}
+
+
+document
+    .getElementById("topToastClose")
+    .addEventListener(
+        "click",
+        () => {
+
+            clearTimeout(topToastTimer);
+
+            document
+                .getElementById("topToast")
+                .classList.remove("visible");
+
+        }
+    );
+
+
+function showImportSummaryToast(added, skipped) {
+
+    if (!added && !skipped) {
+        return;
+    }
+
+    const parts = [];
+
+    if (added) {
+        parts.push(`${added} item${added === 1 ? "" : "s"} added`);
+    }
+
+    if (skipped) {
+        parts.push(`${skipped} item${skipped === 1 ? "" : "s"} skipped`);
+    }
+
+    showTopToast(parts.join(", "));
+
+}
+
+
+function showExportSummaryToast(count) {
+
+    showTopToast(
+        `${count} item${count === 1 ? "" : "s"} exported`
+    );
+
+}
+
+
+function finishImportFlow() {
+
+    showImportSummaryToast(
+        importSessionAdded,
+        importSessionSkipped
+    );
+
+    importSessionAdded = 0;
+    importSessionSkipped = 0;
+
+}
+
+
+function resolveImportCategory(rawCategory) {
+
+    const existing =
+        getCategories().find(
+            cat =>
+                cat.toLowerCase() ===
+                rawCategory.toLowerCase()
+        );
+
+    return existing || rawCategory;
+
+}
+
+
+function nextImportResourceId() {
+
+    return (
+        resources.reduce(
+            (max, resource) =>
+                Math.max(max, resource.id),
+            0
+        ) + 1
+    );
+
+}
+
+
+function commitImportedResource(item, overrideName) {
+
+    const category =
+        resolveImportCategory(item.category);
+
+    const id =
+        nextImportResourceId();
+
+    resources.push({
+        id,
+        name: overrideName || item.name,
+        category,
+        url: item.url,
+        description: item.description,
+        tags: item.tags,
+        createdAt: new Date().toISOString(),
+        editedAt: null,
+        uses: []
+    });
+
+    registerTags(item.tags);
+
+    if (!state.categoryOrder.includes(category)) {
+        state.categoryOrder.push(category);
+    }
+
+    importHighlightedResourceIds.add(id);
+    importSessionAdded++;
+    scheduleImportHighlightClear();
+
+    return id;
+
+}
+
+
+function processImportedResources(importedResources) {
+
+    importSessionAdded = 0;
+    importSessionSkipped = 0;
+
+    const skippedDuplicates = [];
+    const linkCollisions = [];
+
+
+    importedResources.forEach(item => {
+
+        const normalizedItemUrl =
+            normalizeUrlForCompare(item.url);
+
+        const normalizedItemName =
+            item.name.trim().toLowerCase();
+
+
+        const exactMatch =
+            resources.find(
+                resource =>
+                    resource.name.trim().toLowerCase() ===
+                        normalizedItemName &&
+                    normalizeUrlForCompare(resource.url) ===
+                        normalizedItemUrl
+            );
+
+        if (exactMatch) {
+
+            skippedDuplicates.push({
+                item,
+                existingId: exactMatch.id
+            });
+
+            return;
+
+        }
+
+
+        const linkMatch =
+            resources.find(
+                resource =>
+                    normalizeUrlForCompare(resource.url) ===
+                        normalizedItemUrl &&
+                    resource.name.trim().toLowerCase() !==
+                        normalizedItemName
+            );
+
+        if (linkMatch) {
+
+            linkCollisions.push({
+                item,
+                existingId: linkMatch.id
+            });
+
+            return;
+
+        }
+
+
+        const nameMatch =
+            resources.find(
+                resource =>
+                    resource.name.trim().toLowerCase() ===
+                        normalizedItemName &&
+                    normalizeUrlForCompare(resource.url) !==
+                        normalizedItemUrl
+            );
+
+        if (nameMatch) {
+
+            const { originalName, duplicateName } =
+                computeDuplicateNames(nameMatch);
+
+            nameMatch.name = originalName;
+
+            commitImportedResource(item, duplicateName);
+
+            return;
+
+        }
+
+
+        commitImportedResource(item);
+
+    });
+
+
+    saveCategoryOrder(state.categoryOrder);
+
+    render();
+
+
+    pendingLinkCollisions = linkCollisions;
+    pendingSkippedDuplicates = skippedDuplicates;
+
+    presentLinkCollisions();
+
+}
+
+
+function presentLinkCollisions() {
+
+    if (!pendingLinkCollisions.length) {
+
+        presentSkippedDuplicates();
+
+        return;
+
+    }
+
+
+    const count =
+        pendingLinkCollisions.length;
+
+    document.getElementById(
+        "linkCollisionMessage"
+    ).textContent =
+        `${count} link${count === 1 ? "" : "s"} from this import already ${count === 1 ? "exists" : "exist"} under a different name. What would you like to do?`;
+
+    document
+        .getElementById("linkCollisionModal")
+        .classList.add("open");
+
+}
+
+
+function closeLinkCollisionPrompt() {
+
+    document
+        .getElementById("linkCollisionModal")
+        .classList.remove("open");
+
+}
+
+
+document
+    .getElementById("linkCollisionCancel")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeLinkCollisionPrompt();
+
+            importSessionSkipped += pendingLinkCollisions.length;
+
+            pendingLinkCollisions = [];
+
+            presentSkippedDuplicates();
+
+        }
+    );
+
+
+document
+    .getElementById("linkCollisionClose")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeLinkCollisionPrompt();
+
+            importSessionSkipped += pendingLinkCollisions.length;
+
+            pendingLinkCollisions = [];
+
+            presentSkippedDuplicates();
+
+        }
+    );
+
+
+document
+    .getElementById("linkCollisionAddAnyway")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeLinkCollisionPrompt();
+
+            pendingLinkCollisions.forEach(collision => {
+                commitImportedResource(collision.item);
+            });
+
+            pendingLinkCollisions = [];
+
+            saveCategoryOrder(state.categoryOrder);
+
+            render();
+
+            presentSkippedDuplicates();
+
+        }
+    );
+
+
+document
+    .getElementById("linkCollisionReviewOpen")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeLinkCollisionPrompt();
+
+            openLinkCollisionReview();
+
+        }
+    );
+
+
+function openLinkCollisionReview() {
+
+    selectedLinkCollisions =
+        new Set(
+            pendingLinkCollisions.map((_, index) => index)
+        );
+
+    renderLinkCollisionReview();
+
+    document
+        .getElementById("linkCollisionReviewModal")
+        .classList.add("open");
+
+}
+
+
+function goBackFromLinkCollisionReview() {
+
+    // Take the person back to the main prompt instead of just
+    // discarding this review — pendingLinkCollisions (and any
+    // pendingSkippedDuplicates queued up behind it) stay intact so
+    // nothing gets silently cancelled out of the import.
+    document
+        .getElementById("linkCollisionReviewModal")
+        .classList.remove("open");
+
+    presentLinkCollisions();
+
+}
+
+
+document
+    .getElementById("linkCollisionReviewGoBack")
+    .addEventListener(
+        "click",
+        goBackFromLinkCollisionReview
+    );
+
+
+document
+    .getElementById("linkCollisionReviewClose")
+    .addEventListener(
+        "click",
+        goBackFromLinkCollisionReview
+    );
+
+
+function renderLinkCollisionReview() {
+
+    const listEl =
+        document.getElementById("linkCollisionList");
+
+    if (!pendingLinkCollisions.length) {
+
+        listEl.innerHTML =
+            `<div class="option-empty">Nothing left to review.</div>`;
+
+        return;
+
+    }
+
+
+    listEl.innerHTML =
+        pendingLinkCollisions
+            .map((collision, index) => {
+
+                const existing =
+                    resources.find(
+                        resource =>
+                            resource.id === collision.existingId
+                    );
+
+                const existingName =
+                    existing ? existing.name : "(removed)";
+
+                const existingUrl =
+                    existing ? existing.url : "";
+
+                return `
+
+                    <label class="collision-row">
+
+                        <input
+                            type="checkbox"
+                            class="unused-checkbox"
+                            data-index="${index}"
+                            ${selectedLinkCollisions.has(index) ? "checked" : ""}>
+
+                        <div class="collision-side">
+                            ${escapeHTML(existingName)}
+                            <span class="collision-side-sub">
+                                ${escapeHTML(existingUrl)}
+                            </span>
+                        </div>
+
+                        <span class="collision-arrow" aria-hidden="true">=</span>
+
+                        <div class="collision-side">
+                            ${escapeHTML(collision.item.name)}
+                            <span class="collision-side-sub">
+                                ${escapeHTML(collision.item.category)}
+                            </span>
+                        </div>
+
+                    </label>
+
+                `;
+
+            })
+            .join("");
+
+
+    document.getElementById(
+        "linkCollisionSelectAll"
+    ).checked =
+        selectedLinkCollisions.size ===
+        pendingLinkCollisions.length;
+
+}
+
+
+document
+    .getElementById("linkCollisionList")
+    .addEventListener(
+        "change",
+        event => {
+
+            const checkbox =
+                event.target.closest(
+                    ".unused-checkbox"
+                );
+
+            if (!checkbox) {
+                return;
+            }
+
+            const index =
+                Number(checkbox.dataset.index);
+
+            if (checkbox.checked) {
+                selectedLinkCollisions.add(index);
+            } else {
+                selectedLinkCollisions.delete(index);
+            }
+
+            document.getElementById(
+                "linkCollisionSelectAll"
+            ).checked =
+                selectedLinkCollisions.size ===
+                pendingLinkCollisions.length;
+
+        }
+    );
+
+
+document
+    .getElementById("linkCollisionSelectAll")
+    .addEventListener(
+        "change",
+        event => {
+
+            if (event.target.checked) {
+
+                selectedLinkCollisions =
+                    new Set(
+                        pendingLinkCollisions.map((_, index) => index)
+                    );
+
+            } else {
+
+                selectedLinkCollisions.clear();
+
+            }
+
+            renderLinkCollisionReview();
+
+        }
+    );
+
+
+document
+    .getElementById("linkCollisionAddSelected")
+    .addEventListener(
+        "click",
+        () => {
+
+            const toAdd =
+                pendingLinkCollisions.filter(
+                    (_, index) => selectedLinkCollisions.has(index)
+                );
+
+            toAdd.forEach(collision => {
+                commitImportedResource(collision.item);
+            });
+
+            saveCategoryOrder(state.categoryOrder);
+
+            importSessionSkipped += pendingLinkCollisions.length - toAdd.length;
+
+            pendingLinkCollisions = [];
+            selectedLinkCollisions = new Set();
+
+            document
+                .getElementById("linkCollisionReviewModal")
+                .classList.remove("open");
+
+            render();
+
+            presentSkippedDuplicates();
+
+        }
+    );
+
+
+function presentSkippedDuplicates() {
+
+    if (!pendingSkippedDuplicates.length) {
+        finishImportFlow();
+        return;
+    }
+
+
+    const count =
+        pendingSkippedDuplicates.length;
+
+    document.getElementById(
+        "skippedDuplicatesTitle"
+    ).textContent =
+        `Didn't add ${count} card${count === 1 ? "" : "s"} since ${count === 1 ? "it" : "they"} already exist${count === 1 ? "s" : ""}`;
+
+    document
+        .getElementById("skippedDuplicatesModal")
+        .classList.add("open");
+
+}
+
+
+function closeSkippedDuplicatesPrompt() {
+
+    document
+        .getElementById("skippedDuplicatesModal")
+        .classList.remove("open");
+
+}
+
+
+document
+    .getElementById("skippedDuplicatesOkay")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeSkippedDuplicatesPrompt();
+
+            importSessionSkipped += pendingSkippedDuplicates.length;
+
+            pendingSkippedDuplicates = [];
+
+            finishImportFlow();
+
+        }
+    );
+
+
+document
+    .getElementById("skippedDuplicatesClose")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeSkippedDuplicatesPrompt();
+
+            importSessionSkipped += pendingSkippedDuplicates.length;
+
+            pendingSkippedDuplicates = [];
+
+            finishImportFlow();
+
+        }
+    );
+
+
+document
+    .getElementById("skippedDuplicatesReviewOpen")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeSkippedDuplicatesPrompt();
+
+            openSkippedDuplicatesReview();
+
+        }
+    );
+
+
+function openSkippedDuplicatesReview() {
+
+    selectedSkippedDuplicates = new Set();
+
+    renderSkippedDuplicatesReview();
+
+    document
+        .getElementById("skippedDuplicatesReviewModal")
+        .classList.add("open");
+
+}
+
+
+function goBackFromSkippedDuplicatesReview() {
+
+    // Same idea as the link-collision review's "Go back" — return to
+    // the summary prompt instead of discarding it, so nothing gets
+    // silently cancelled out of the import.
+    document
+        .getElementById("skippedDuplicatesReviewModal")
+        .classList.remove("open");
+
+    presentSkippedDuplicates();
+
+}
+
+
+document
+    .getElementById("skippedDuplicatesReviewGoBack")
+    .addEventListener(
+        "click",
+        goBackFromSkippedDuplicatesReview
+    );
+
+
+document
+    .getElementById("skippedDuplicatesReviewClose")
+    .addEventListener(
+        "click",
+        goBackFromSkippedDuplicatesReview
+    );
+
+
+function renderSkippedDuplicatesReview() {
+
+    const listEl =
+        document.getElementById("skippedDuplicatesList");
+
+    if (!pendingSkippedDuplicates.length) {
+
+        listEl.innerHTML =
+            `<div class="option-empty">Nothing left to review.</div>`;
+
+        return;
+
+    }
+
+
+    listEl.innerHTML =
+        pendingSkippedDuplicates
+            .map((skipped, index) => `
+
+                <div class="unused-row">
+
+                    <label class="unused-row-label">
+
+                        <input
+                            type="checkbox"
+                            class="unused-checkbox"
+                            data-index="${index}"
+                            ${selectedSkippedDuplicates.has(index) ? "checked" : ""}>
+
+                        ${escapeHTML(skipped.item.name)}
+
+                        <span class="unused-row-sub">
+                            — ${escapeHTML(skipped.item.category)}
+                        </span>
+
+                    </label>
+
+                </div>
+
+            `)
+            .join("");
+
+
+    document.getElementById(
+        "skippedDuplicatesSelectAll"
+    ).checked =
+        selectedSkippedDuplicates.size ===
+            pendingSkippedDuplicates.length &&
+        pendingSkippedDuplicates.length > 0;
+
+}
+
+
+document
+    .getElementById("skippedDuplicatesList")
+    .addEventListener(
+        "change",
+        event => {
+
+            const checkbox =
+                event.target.closest(
+                    ".unused-checkbox"
+                );
+
+            if (!checkbox) {
+                return;
+            }
+
+            const index =
+                Number(checkbox.dataset.index);
+
+            if (checkbox.checked) {
+                selectedSkippedDuplicates.add(index);
+            } else {
+                selectedSkippedDuplicates.delete(index);
+            }
+
+            document.getElementById(
+                "skippedDuplicatesSelectAll"
+            ).checked =
+                selectedSkippedDuplicates.size ===
+                pendingSkippedDuplicates.length;
+
+        }
+    );
+
+
+document
+    .getElementById("skippedDuplicatesSelectAll")
+    .addEventListener(
+        "change",
+        event => {
+
+            if (event.target.checked) {
+
+                selectedSkippedDuplicates =
+                    new Set(
+                        pendingSkippedDuplicates.map((_, index) => index)
+                    );
+
+            } else {
+
+                selectedSkippedDuplicates.clear();
+
+            }
+
+            renderSkippedDuplicatesReview();
+
+        }
+    );
+
+
+document
+    .getElementById("skippedDuplicatesAddSelected")
+    .addEventListener(
+        "click",
+        () => {
+
+            const toAdd =
+                pendingSkippedDuplicates.filter(
+                    (_, index) => selectedSkippedDuplicates.has(index)
+                );
+
+            toAdd.forEach(skipped => {
+
+                const existing =
+                    resources.find(
+                        resource =>
+                            resource.id === skipped.existingId
+                    );
+
+                if (existing) {
+
+                    const { originalName, duplicateName } =
+                        computeDuplicateNames(existing);
+
+                    existing.name = originalName;
+
+                    commitImportedResource(
+                        skipped.item,
+                        duplicateName
+                    );
+
+                } else {
+
+                    commitImportedResource(skipped.item);
+
+                }
+
+            });
+
+            saveCategoryOrder(state.categoryOrder);
+
+            importSessionSkipped += pendingSkippedDuplicates.length - toAdd.length;
+
+            pendingSkippedDuplicates = [];
+            selectedSkippedDuplicates = new Set();
+
+            document
+                .getElementById("skippedDuplicatesReviewModal")
+                .classList.remove("open");
+
+            render();
+
+            finishImportFlow();
+
+        }
+    );
+
+
+document
+    .getElementById("exportBackupOption")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeAllDropdowns();
+            exportResourcesToExcel();
+
+        }
+    );
+
+
+let backupFilePickerSafetyTimer = null;
+let activeImportLoadingElements = [];
+
+
+function startImportLoading(...elements) {
+
+    activeImportLoadingElements = elements;
+
+    elements.forEach(
+        el => el.classList.add("loading")
+    );
+
+    if (elements.includes(document.getElementById("addResourceImportButton"))) {
+        document.getElementById("addResourceImportLabel").textContent = "Importing";
+    }
+
+    if (elements.includes(document.getElementById("importBackupOption"))) {
+        document.getElementById("importBackupOptionLabel").textContent = "Importing";
+    }
+
+
+    clearTimeout(
+        backupFilePickerSafetyTimer
+    );
+
+    // Not every browser reliably fires "cancel" on a file input, so
+    // this safety timeout makes sure the loading cue always stops
+    // even if neither "change" nor "cancel" ever reaches us.
+    backupFilePickerSafetyTimer =
+        setTimeout(
+            stopImportLoading,
+            15000
+        );
+
+}
+
+
+function stopImportLoading() {
+
+    activeImportLoadingElements.forEach(
+        el => el.classList.remove("loading")
+    );
+
+    activeImportLoadingElements = [];
+
+    document.getElementById("addResourceImportLabel").textContent = "Import";
+    document.getElementById("importBackupOptionLabel").textContent = "Import a backup";
+
+    clearTimeout(
+        backupFilePickerSafetyTimer
+    );
+
+}
+
+
+document
+    .getElementById("importBackupOption")
+    .addEventListener(
+        "click",
+        event => {
+
+            // Keep the settings menu open behind the file picker so its
+            // "Import a backup" row can actually show the loading cue —
+            // it only closes once a file has been chosen, further down.
+            // (Stop this click from bubbling to the document-level
+            // listener below, which would otherwise close it right away.)
+            event.stopPropagation();
+
+            startImportLoading(
+                document.getElementById("settingsButton"),
+                document.getElementById("importBackupOption")
+            );
+
+            document
+                .getElementById("backupFileInput")
+                .click();
+
+        }
+    );
+
+
+document
+    .getElementById("addResourceImportButton")
+    .addEventListener(
+        "click",
+        () => {
+
+            // Keep the Add resource modal open behind the file picker
+            // so its Import button can actually show the loading cue —
+            // it only closes once a file has been chosen, further down.
+            startImportLoading(
+                document.getElementById("addResourceImportButton")
+            );
+
+            document
+                .getElementById("backupFileInput")
+                .click();
+
+        }
+    );
+
+
+document
+    .getElementById("backupFileInput")
+    .addEventListener(
+        "change",
+        event => {
+
+            const wasAddResourceImport =
+                activeImportLoadingElements.includes(
+                    document.getElementById("addResourceImportButton")
+                );
+
+            const wasSettingsImport =
+                activeImportLoadingElements.includes(
+                    document.getElementById("importBackupOption")
+                );
+
+            stopImportLoading();
+
+            const file =
+                event.target.files[0];
+
+            if (file) {
+
+                if (wasAddResourceImport) {
+                    document
+                        .getElementById("addResourceModal")
+                        .classList.remove("open");
+                }
+
+                if (wasSettingsImport) {
+                    closeAllDropdowns();
+                }
+
+                importBackupFromWorkbook(file);
+
+            }
+
+            event.target.value = "";
+
+        }
+    );
+
+
+document
+    .getElementById("backupFileInput")
+    .addEventListener(
+        "cancel",
+        () => {
+
+            stopImportLoading();
+
+        }
+    );
+
+
+window.addEventListener(
+    "focus",
+    () => {
+
+        // The native file-picker dialog blurs the window while it's
+        // open; getting focus back means it has closed one way or
+        // another, so the loading cue can stop shortly after.
+        if (activeImportLoadingElements.length) {
+
+            setTimeout(
+                stopImportLoading,
+                400
+            );
+
+        }
+
+    }
+);
 
 
 document.addEventListener(
@@ -6112,9 +8898,16 @@ function renderEditTagsSuggestions() {
 }
 
 
+function stripTagSpaces(rawTag) {
+
+    return rawTag.replace(/\s+/g, "");
+
+}
+
+
 function addEditTagToSelection(rawTag) {
 
-    const trimmed = rawTag.trim();
+    const trimmed = stripTagSpaces(rawTag);
 
     if (!trimmed) {
         return;
@@ -6212,7 +9005,30 @@ document
     .addEventListener(
         "input",
         () => {
+
+            const input =
+                document.getElementById("editTagsInput");
+
+            if (/\s/.test(input.value)) {
+
+                const cursorPos =
+                    input.selectionStart;
+
+                const spacesBefore =
+                    (input.value.slice(0, cursorPos).match(/\s/g) || []).length;
+
+                input.value =
+                    stripTagSpaces(input.value);
+
+                const newPos =
+                    Math.max(0, cursorPos - spacesBefore);
+
+                input.setSelectionRange(newPos, newPos);
+
+            }
+
             renderEditTagsSuggestions();
+
         }
     );
 
@@ -6752,7 +9568,7 @@ function renderAddTagsChips() {
 
 function addTagToSelection(rawTag) {
 
-    const trimmed = rawTag.trim();
+    const trimmed = stripTagSpaces(rawTag);
 
     if (!trimmed) {
         return;
@@ -6845,7 +9661,30 @@ document
     .addEventListener(
         "input",
         () => {
+
+            const input =
+                document.getElementById("addTagsInput");
+
+            if (/\s/.test(input.value)) {
+
+                const cursorPos =
+                    input.selectionStart;
+
+                const spacesBefore =
+                    (input.value.slice(0, cursorPos).match(/\s/g) || []).length;
+
+                input.value =
+                    stripTagSpaces(input.value);
+
+                const newPos =
+                    Math.max(0, cursorPos - spacesBefore);
+
+                input.setSelectionRange(newPos, newPos);
+
+            }
+
             renderAddTagsSuggestions();
+
         }
     );
 
@@ -6967,11 +9806,16 @@ document
 
 /* ---- open / save ---- */
 
-function openAddResourceModal() {
+let quickAddTargetCategory = null;
+
+
+function openAddResourceModal(prefillCategory) {
+
+    quickAddTargetCategory = prefillCategory || null;
 
     document.getElementById("addName").value = "";
     document.getElementById("addUrl").value = "";
-    document.getElementById("addCategory").value = "";
+    document.getElementById("addCategory").value = prefillCategory || "";
     document.getElementById("addDescription").value = "";
     document.getElementById("addTagsInput").value = "";
     document.getElementById("addCategoryPositionType").value = "top";
@@ -7016,7 +9860,9 @@ function openAddResourceModal() {
         .classList.add("open");
 
 
-    document.getElementById("addCategory").focus();
+    document
+        .getElementById(prefillCategory ? "addName" : "addCategory")
+        .focus();
 
 }
 
@@ -7142,7 +9988,17 @@ document
                 }
 
 
-                state.sort[category] = "newest";
+                const isQuickAddToSameCategory =
+                    quickAddTargetCategory &&
+                    !isNewCategory &&
+                    quickAddTargetCategory.toLowerCase() ===
+                        category.toLowerCase();
+
+                if (!isQuickAddToSameCategory) {
+
+                    state.sort[category] = "newest";
+
+                }
 
                 if (!state.expandedCategories.includes(category)) {
                     state.expandedCategories.push(category);
@@ -7152,6 +10008,9 @@ document
                 document
                     .getElementById("addResourceModal")
                     .classList.remove("open");
+
+
+                quickAddTargetCategory = null;
 
 
                 render();
@@ -8267,8 +11126,10 @@ document
 
 let unusedSelectedCategories = new Set();
 let unusedSelectedTags = new Set();
+let unusedSelectedLinks = new Set();
 let currentUnusedCategories = [];
 let currentUnusedTags = [];
+let currentUnusedLinks = [];
 
 
 function removeEmptyCategoryFromState(category) {
@@ -8299,6 +11160,7 @@ function openUnusedModal() {
 
     unusedSelectedCategories = new Set();
     unusedSelectedTags = new Set();
+    unusedSelectedLinks = new Set();
 
     renderUnusedLists();
 
@@ -8313,6 +11175,41 @@ function renderUnusedLists() {
 
     currentUnusedCategories = getUnusedCategories();
     currentUnusedTags = getUnusedTags();
+    currentUnusedLinks = getNeverCopiedLinks();
+
+
+    const linksListEl =
+        document.getElementById("unusedLinksList");
+
+    linksListEl.innerHTML =
+        currentUnusedLinks.length
+            ? currentUnusedLinks
+                .map(
+                    (resource, index) => `
+                        <div class="unused-row">
+                            <label class="unused-row-label">
+                                <input
+                                    type="checkbox"
+                                    class="unused-checkbox"
+                                    data-kind="link"
+                                    data-index="${index}"
+                                    ${unusedSelectedLinks.has(resource.id) ? "checked" : ""}>
+                                ${escapeHTML(resource.name)}
+                                <span class="unused-row-sub">— ${escapeHTML(resource.category)}</span>
+                            </label>
+                            <button
+                                type="button"
+                                class="modal-button small danger"
+                                data-action="unused-delete-one"
+                                data-kind="link"
+                                data-index="${index}">
+                                Delete
+                            </button>
+                        </div>
+                    `
+                )
+                .join("")
+            : `<div class="option-empty">No links yet to copy — every link has been copied at least once.</div>`;
 
 
     const categoriesListEl =
@@ -8383,11 +11280,13 @@ function renderUnusedLists() {
 
     const totalCount =
         currentUnusedCategories.length +
-        currentUnusedTags.length;
+        currentUnusedTags.length +
+        currentUnusedLinks.length;
 
     const selectedCount =
         unusedSelectedCategories.size +
-        unusedSelectedTags.size;
+        unusedSelectedTags.size +
+        unusedSelectedLinks.size;
 
     const selectAllBox =
         document.getElementById("unusedSelectAll");
@@ -8415,24 +11314,29 @@ function handleUnusedListClick(event) {
 
         const index = Number(checkbox.dataset.index);
 
-        const name =
+        const key =
             kind === "category"
                 ? currentUnusedCategories[index]
-                : currentUnusedTags[index];
+                : kind === "tag"
+                    ? currentUnusedTags[index]
+                    : currentUnusedLinks[index] &&
+                      currentUnusedLinks[index].id;
 
-        if (name === undefined) {
+        if (key === undefined) {
             return;
         }
 
         const set =
             kind === "category"
                 ? unusedSelectedCategories
-                : unusedSelectedTags;
+                : kind === "tag"
+                    ? unusedSelectedTags
+                    : unusedSelectedLinks;
 
         if (checkbox.checked) {
-            set.add(name);
+            set.add(key);
         } else {
-            set.delete(name);
+            set.delete(key);
         }
 
         renderUnusedLists();
@@ -8452,6 +11356,43 @@ function handleUnusedListClick(event) {
         const kind = deleteButton.dataset.kind;
 
         const index = Number(deleteButton.dataset.index);
+
+        if (kind === "link") {
+
+            const resource = currentUnusedLinks[index];
+
+            if (!resource) {
+                return;
+            }
+
+            openConfirmModal(
+                "Delete link",
+                `Delete "${resource.name}"? This can't be undone.`,
+                "Yes, delete",
+                () => {
+
+                    const resourceIndex =
+                        resources.findIndex(
+                            item => item.id === resource.id
+                        );
+
+                    if (resourceIndex !== -1) {
+                        resources.splice(resourceIndex, 1);
+                    }
+
+                    unusedSelectedLinks.delete(resource.id);
+
+                    render();
+
+                    renderUnusedLists();
+
+                }
+            );
+
+            return;
+
+        }
+
 
         const name =
             kind === "category"
@@ -8511,10 +11452,15 @@ document
                     name => unusedSelectedTags.add(name)
                 );
 
+                currentUnusedLinks.forEach(
+                    resource => unusedSelectedLinks.add(resource.id)
+                );
+
             } else {
 
                 unusedSelectedCategories.clear();
                 unusedSelectedTags.clear();
+                unusedSelectedLinks.clear();
 
             }
 
@@ -8541,25 +11487,80 @@ document
 
 
 document
+    .getElementById("unusedLinksList")
+    .addEventListener(
+        "click",
+        handleUnusedListClick
+    );
+
+
+document
     .getElementById("unusedDeleteSelected")
     .addEventListener(
         "click",
         () => {
 
-            unusedSelectedCategories.forEach(
-                name => removeEmptyCategoryFromState(name)
-            );
+            const categoriesToDelete =
+                [...unusedSelectedCategories];
 
-            unusedSelectedTags.forEach(
-                name => deleteTag(name)
-            );
+            const tagsToDelete =
+                [...unusedSelectedTags];
 
-            unusedSelectedCategories = new Set();
-            unusedSelectedTags = new Set();
+            const linkIdsToDelete =
+                [...unusedSelectedLinks];
 
-            render();
 
-            renderUnusedLists();
+            function commitBulkUnusedDelete() {
+
+                categoriesToDelete.forEach(
+                    name => removeEmptyCategoryFromState(name)
+                );
+
+                tagsToDelete.forEach(
+                    name => deleteTag(name)
+                );
+
+                linkIdsToDelete.forEach(
+                    id => {
+
+                        const index =
+                            resources.findIndex(
+                                item => item.id === id
+                            );
+
+                        if (index !== -1) {
+                            resources.splice(index, 1);
+                        }
+
+                    }
+                );
+
+                unusedSelectedCategories = new Set();
+                unusedSelectedTags = new Set();
+                unusedSelectedLinks = new Set();
+
+                render();
+
+                renderUnusedLists();
+
+            }
+
+
+            if (linkIdsToDelete.length) {
+
+                openConfirmModal(
+                    "Delete links",
+                    `Delete ${linkIdsToDelete.length} link${linkIdsToDelete.length === 1 ? "" : "s"} along with the other selected items? This can't be undone.`,
+                    "Yes, delete",
+                    commitBulkUnusedDelete
+                );
+
+                return;
+
+            }
+
+
+            commitBulkUnusedDelete();
 
         }
     );
@@ -8730,6 +11731,303 @@ document
                     variant: "primary"
                 }
             );
+
+        }
+    );
+
+
+/* ============================================================
+   DUPLICATE CARD (make a copy under a new resource link)
+============================================================ */
+
+let pendingDuplicateOriginalId = null;
+
+
+// Works out what the original and the new duplicate should be named
+// so that names stay unique: "fish" duplicated becomes original
+// "fish 1" + new "fish 2"; duplicating "fish 3" again just finds the
+// next free number for the new copy and leaves "fish 3" untouched.
+function computeDuplicateNames(original) {
+
+    const suffixMatch =
+        original.name.match(/^(.*?)\s+(\d+)$/);
+
+    const baseName =
+        suffixMatch ? suffixMatch[1] : original.name;
+
+    const usedNumbers = new Set();
+
+    resources.forEach(item => {
+
+        const match =
+            item.name.match(/^(.*?)\s+(\d+)$/);
+
+        if (
+            match &&
+            match[1].toLowerCase() === baseName.toLowerCase()
+        ) {
+            usedNumbers.add(Number(match[2]));
+        }
+
+    });
+
+
+    if (suffixMatch) {
+
+        let nextNumber = 1;
+
+        while (usedNumbers.has(nextNumber)) {
+            nextNumber++;
+        }
+
+        return {
+            originalName: original.name,
+            duplicateName: `${baseName} ${nextNumber}`
+        };
+
+    }
+
+
+    let originalNumber = 1;
+
+    while (usedNumbers.has(originalNumber)) {
+        originalNumber++;
+    }
+
+    usedNumbers.add(originalNumber);
+
+    let duplicateNumber = originalNumber + 1;
+
+    while (usedNumbers.has(duplicateNumber)) {
+        duplicateNumber++;
+    }
+
+    return {
+        originalName: `${baseName} ${originalNumber}`,
+        duplicateName: `${baseName} ${duplicateNumber}`
+    };
+
+}
+
+
+function openDuplicateResourceModal(resource) {
+
+    pendingDuplicateOriginalId = resource.id;
+
+    document.getElementById(
+        "duplicateResourceTitle"
+    ).textContent =
+        `Duplicate "${resource.name}"`;
+
+    document.getElementById(
+        "duplicateResourceIntro"
+    ).textContent =
+        "A duplicate needs its own resource link. Enter the new link below.";
+
+    const urlInput =
+        document.getElementById("duplicateResourceUrl");
+
+    urlInput.value = "";
+
+    const errorEl =
+        document.getElementById("duplicateResourceUrlError");
+
+    errorEl.textContent = "";
+    errorEl.classList.remove("visible");
+
+
+    document
+        .getElementById("duplicateResourceModal")
+        .classList.add("open");
+
+    urlInput.focus();
+
+}
+
+
+function showDuplicateResourceError(message) {
+
+    const errorEl =
+        document.getElementById("duplicateResourceUrlError");
+
+    errorEl.textContent = message;
+    errorEl.classList.add("visible");
+
+}
+
+
+function closeDuplicateResourceModal() {
+
+    document
+        .getElementById("duplicateResourceModal")
+        .classList.remove("open");
+
+    document
+        .getElementById("duplicateResourceUrlError")
+        .classList.remove("visible");
+
+}
+
+
+function handleDuplicateResourceCancel() {
+
+    const originalId =
+        pendingDuplicateOriginalId;
+
+    pendingDuplicateOriginalId = null;
+
+    closeDuplicateResourceModal();
+
+
+    const original =
+        resources.find(item => item.id === originalId);
+
+    if (!original) {
+        return;
+    }
+
+
+    openConfirmModal(
+        "Edit this card instead?",
+        "A duplicate is only created once there's a new resource link. Would you like to edit the original card instead?",
+        "Yes, edit",
+        () => {
+            openEditModal(original);
+        },
+        {
+            cancelLabel: "No thanks",
+            variant: "primary"
+        }
+    );
+
+}
+
+
+document
+    .getElementById("duplicateResourceCancel")
+    .addEventListener(
+        "click",
+        handleDuplicateResourceCancel
+    );
+
+
+document
+    .getElementById("duplicateResourceClose")
+    .addEventListener(
+        "click",
+        handleDuplicateResourceCancel
+    );
+
+
+document
+    .getElementById("duplicateResourceCreate")
+    .addEventListener(
+        "click",
+        () => {
+
+            const original =
+                resources.find(
+                    item => item.id === pendingDuplicateOriginalId
+                );
+
+            if (!original) {
+                closeDuplicateResourceModal();
+                return;
+            }
+
+
+            const newUrl =
+                document
+                    .getElementById("duplicateResourceUrl")
+                    .value
+                    .trim();
+
+            if (!newUrl) {
+
+                showDuplicateResourceError(
+                    "Enter a resource link for the duplicate."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                normalizeUrlForCompare(newUrl) ===
+                normalizeUrlForCompare(original.url)
+            ) {
+
+                showDuplicateResourceError(
+                    "Enter a different link than the original card's."
+                );
+
+                return;
+
+            }
+
+
+            const { originalName, duplicateName } =
+                computeDuplicateNames(original);
+
+            original.name = originalName;
+
+
+            const nextId =
+                resources.reduce(
+                    (max, resource) =>
+                        Math.max(max, resource.id),
+                    0
+                ) + 1;
+
+            resources.push({
+                id: nextId,
+                name: duplicateName,
+                category: original.category,
+                url: newUrl,
+                description: original.description,
+                tags: (original.tags || []).slice(),
+                createdAt: new Date().toISOString(),
+                editedAt: null,
+                uses: []
+            });
+
+            registerTags(original.tags || []);
+
+
+            pendingDuplicateOriginalId = null;
+
+            closeDuplicateResourceModal();
+
+            render();
+
+            flashCardNameGlow(original.id);
+            flashCardGlow(nextId);
+
+        }
+    );
+
+
+document
+    .getElementById("editModalDuplicateButton")
+    .addEventListener(
+        "click",
+        () => {
+
+            const resource =
+                resources.find(
+                    item => item.id === editingResourceId
+                );
+
+            if (!resource) {
+                return;
+            }
+
+            document
+                .getElementById("editModal")
+                .classList.remove("open");
+
+            openDuplicateResourceModal(resource);
 
         }
     );
@@ -9340,6 +12638,34 @@ document
 
             if (
                 action ===
+                "duplicate"
+            ) {
+
+                const resource =
+                    resources.find(
+                        item =>
+                            item.id ===
+                            Number(
+                                actionElement.dataset.id
+                            )
+                    );
+
+
+                if (resource) {
+
+                    openDuplicateResourceModal(
+                        resource
+                    );
+
+                }
+
+                return;
+
+            }
+
+
+            if (
+                action ===
                 "details"
             ) {
 
@@ -9382,6 +12708,20 @@ document
 
             if (
                 action ===
+                "quick-add-resource"
+            ) {
+
+                openAddResourceModal(
+                    actionElement.dataset.category
+                );
+
+                return;
+
+            }
+
+
+            if (
+                action ===
                 "view-tag"
             ) {
 
@@ -9394,6 +12734,37 @@ document
                 return;
 
             }
+
+
+            if (
+                action ===
+                "set-category-view"
+            ) {
+
+                event.stopPropagation();
+
+                const category =
+                    actionElement.dataset.category;
+
+                const mode =
+                    actionElement.dataset.viewMode === "stacked"
+                        ? "stacked"
+                        : "list";
+
+                state.categoryView[category] = {
+                    mode
+                };
+
+                render();
+
+                flashSortButtonGlow(category);
+
+                // Picking List or Stacked is a done deal, just like any
+                // other Sort option — the dropdown closes either way.
+                return;
+
+            }
+
 
         }
     );
