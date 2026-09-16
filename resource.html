@@ -682,6 +682,59 @@ h1 {
     color: var(--soft);
 }
 
+/* Wraps a .dropdown-search input with the "show all" eye button next
+   to it, so results stay decluttered (hidden until you type) by
+   default, but the whole list is one click away. */
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 7px;
+}
+
+.search-row .dropdown-search {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.search-eye-btn {
+    flex-shrink: 0;
+
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.search-eye-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.search-eye-btn:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+}
+
+/* Active = currently showing everything, ignoring the typed query. */
+.search-eye-btn.active {
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: var(--dark-text);
+}
+
 .option-list {
     max-height: 220px;
     overflow-y: auto;
@@ -719,6 +772,7 @@ h1 {
 
     padding: 7px 6px;
 
+    border: 1px solid transparent;
     border-radius: 6px;
 
     color: var(--muted);
@@ -748,10 +802,12 @@ h1 {
 }
 
 .option:disabled {
-    opacity: .4;
+    opacity: .8;
     cursor: not-allowed;
 
     justify-content: space-between;
+
+    border: 1px solid var(--brand-yellow);
 }
 
 .option:disabled:hover {
@@ -760,7 +816,7 @@ h1 {
 }
 
 .option-current-tag {
-    color: var(--soft);
+    color: var(--brand-yellow);
     font-size: 8px;
     font-weight: 700;
     text-transform: uppercase;
@@ -822,14 +878,25 @@ h1 {
     margin-bottom: 0;
 }
 
-/* A soft glass-shine band that loops continuously while a search is
-   active — including on collapsed categories, whose header strip is
-   its whole surface. It runs on a real-world clock rather than restarting
-   at 0% on every keystroke: each render sets --shine-delay to a negative
-   offset equal to how far into the loop the shine should already be
-   (see searchShineStartTime in the script), so a category re-rendered
-   mid-sweep keeps sweeping instead of visibly snapping back to the start. */
-.category-searching::before {
+/* A soft glass-shine band that plays on a matching category while a
+   search is active — including on collapsed categories, whose header
+   strip is its whole surface. It runs on a real-world clock rather
+   than restarting at 0% on every keystroke: each render sets
+   --shine-delay to a negative offset equal to how far into the sweep
+   it should already be (see searchShineStartTime in the script), so a
+   category re-rendered mid-sweep keeps sweeping instead of visibly
+   snapping back to the start.
+
+   .category-searching loops for as long as the search stays active
+   (the "Loop search animation" setting, on by default).
+   .category-searching-once plays that same sweep a single time: past
+   the 5s mark, --shine-delay is a raw (non-wrapping) negative value
+   large enough that the single iteration is always already finished,
+   so animation-fill-mode:forwards just holds it on its final —
+   invisible — frame from then on, no matter how many more times this
+   re-renders while still searching. */
+.category-searching::before,
+.category-searching-once::before {
     content: "";
 
     position: absolute;
@@ -848,8 +915,19 @@ h1 {
 
     pointer-events: none;
 
-    animation: categorySearchSweep 5s ease-in-out infinite;
+    animation-name: categorySearchSweep;
+    animation-duration: 5s;
+    animation-timing-function: ease-in-out;
     animation-delay: var(--shine-delay, 0s);
+}
+
+.category-searching::before {
+    animation-iteration-count: infinite;
+}
+
+.category-searching-once::before {
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
 }
 
 @keyframes categorySearchSweep {
@@ -966,6 +1044,24 @@ h1 {
     height: 1px;
     margin: 4px 2px;
     background: var(--border);
+}
+
+.settings-toggle-row {
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.settings-toggle-row:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+}
+
+.settings-toggle-row input[type="checkbox"] {
+    width: 13px;
+    height: 13px;
+
+    accent-color: var(--brand-yellow);
+    cursor: pointer;
 }
 
 .inline-move-options {
@@ -1088,6 +1184,36 @@ h1 {
 
     font-size: 9px;
     font-weight: 700;
+}
+
+/* Plays when a tag is removed, right before it actually leaves the
+   selection — a quick red fade/shrink instead of just vanishing. */
+@keyframes tagChipFadeOutRed {
+
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        background: var(--surface-hover);
+        color: var(--text);
+    }
+
+    30% {
+        background: rgba(224, 90, 90, .3);
+        color: #e0574e;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(.8);
+        background: rgba(224, 90, 90, .3);
+        color: #e0574e;
+    }
+
+}
+
+.tag-chip.tag-chip-removing {
+    animation: tagChipFadeOutRed .32s ease forwards;
+    pointer-events: none;
 }
 
 .tag-chip-remove {
@@ -1726,6 +1852,37 @@ h1 {
     border-radius: 11px;
 }
 
+/* Plays on a card right before it's actually removed — same red
+   fade/shrink idea as tagChipFadeOutRed, just on the whole card. */
+@keyframes cardFadeOutRed {
+
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: none;
+    }
+
+    30% {
+        box-shadow:
+            0 0 0 2px #e0574e,
+            0 0 18px rgba(224, 90, 90, .35);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(.96);
+        box-shadow:
+            0 0 0 2px #e0574e,
+            0 0 18px rgba(224, 90, 90, .35);
+    }
+
+}
+
+.card.card-deleting {
+    animation: cardFadeOutRed .4s ease forwards;
+    pointer-events: none;
+}
+
 .card-glow-yellow {
     box-shadow:
         0 0 0 2px var(--brand-yellow),
@@ -1808,7 +1965,8 @@ h1 {
 }
 
 .category-name.name-flash-yellow,
-.card-title.name-flash-yellow {
+.card-title.name-flash-yellow,
+.description.name-flash-yellow {
     color: var(--brand-yellow);
 }
 
@@ -1883,6 +2041,8 @@ h1 {
 
     font-size: 10px;
     line-height: 1.5;
+
+    transition: color .2s ease;
 }
 
 
@@ -1916,6 +2076,14 @@ h1 {
 
 .tag:hover {
     color: var(--brand-yellow);
+}
+
+/* Flashes a single newly-added tag yellow for a few seconds — same
+   idea as .name-flash-yellow, but tags get a glow ring too since a
+   plain color change is easy to miss on such small text. */
+.tag.tag-flash-yellow {
+    color: var(--brand-yellow);
+    text-shadow: 0 0 10px rgba(254, 242, 0, .55);
 }
 
 
@@ -1957,7 +2125,7 @@ h1 {
     font-size: 9px;
     font-weight: 750;
 
-    transition: background .15s ease;
+    transition: background .15s ease, box-shadow .25s ease;
 }
 
 .copy-btn:hover {
@@ -1998,12 +2166,22 @@ h1 {
     font-size: 9px;
     font-weight: 750;
 
-    transition: color .15s ease, border-color .15s ease;
+    transition: color .15s ease, border-color .15s ease, box-shadow .25s ease;
 }
 
 .preview-btn:hover {
     color: var(--brand-yellow);
     border-color: var(--brand-yellow);
+}
+
+/* Fired together on the preview + copy buttons when the card's link
+   gets edited — a shared glow ring so both light up as "this is what
+   changed", the same way the name/description/tag flashes do. */
+.copy-btn.link-flash-yellow,
+.preview-btn.link-flash-yellow {
+    box-shadow:
+        0 0 0 2px var(--brand-yellow),
+        0 0 14px rgba(254, 242, 0, .35);
 }
 
 .preview-btn svg {
@@ -2984,6 +3162,17 @@ h1 {
                 Export all resources
             </button>
 
+            <div class="move-menu-divider"></div>
+
+            <label
+                class="move-row settings-toggle-row"
+                for="loopSearchAnimationToggle">
+                <span>Loop search animation</span>
+                <input
+                    type="checkbox"
+                    id="loopSearchAnimationToggle">
+            </label>
+
         </div>
 
 
@@ -3275,10 +3464,34 @@ h1 {
                             Categories &amp; tags
                         </div>
 
-                        <input
-                            class="dropdown-search"
-                            data-search-target="filterCategoriesTags"
-                            placeholder="Search categories and tags...">
+                        <div class="search-row">
+
+                            <input
+                                class="dropdown-search"
+                                data-search-target="filterCategoriesTags"
+                                placeholder="Search categories and tags...">
+
+                            <button
+                                type="button"
+                                class="search-eye-btn"
+                                data-search-target="filterCategoriesTags"
+                                title="Show all categories and tags"
+                                aria-label="Show all categories and tags">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2">
+
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+
+                                </svg>
+
+                            </button>
+
+                        </div>
 
                         <div
                             class="option-hint"
@@ -4136,11 +4349,35 @@ h1 {
 
         <div class="modal-field">
 
-            <input
-                class="dropdown-search"
-                id="categoryPickerSearch"
-                data-search-target="categoryPickerList"
-                placeholder="Search categories...">
+            <div class="search-row">
+
+                <input
+                    class="dropdown-search"
+                    id="categoryPickerSearch"
+                    data-search-target="categoryPickerList"
+                    placeholder="Search categories...">
+
+                <button
+                    type="button"
+                    class="search-eye-btn"
+                    data-search-target="categoryPickerList"
+                    title="Show all categories"
+                    aria-label="Show all categories">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+
+                    </svg>
+
+                </button>
+
+            </div>
 
             <div
                 class="option-hint"
@@ -4540,6 +4777,69 @@ h1 {
                 class="field-error"
                 id="duplicateResourceUrlError">
             </div>
+
+        </div>
+
+
+        <div class="modal-field">
+
+            <label class="modal-label">
+                New card name (optional)
+            </label>
+
+            <input
+                id="duplicateResourceName"
+                class="modal-input"
+                type="text"
+                autocomplete="off"
+                placeholder="Leave blank to auto-number">
+
+        </div>
+
+
+        <div
+            class="modal-field autocomplete-field"
+            id="duplicateTagsField">
+
+            <label class="modal-label">
+                Tags
+            </label>
+
+            <div
+                class="tag-chip-row"
+                id="duplicateTagsChips">
+            </div>
+
+            <div
+                class="tag-input-box"
+                id="duplicateTagsBox"
+                style="display:none; margin-top:7px;">
+
+                <input
+                    id="duplicateTagsInput"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Search or add tags">
+
+            </div>
+
+            <div
+                class="autocomplete-list"
+                id="duplicateTagsSuggestions">
+            </div>
+
+        </div>
+
+
+        <div class="modal-field">
+
+            <label class="modal-label">
+                Description
+            </label>
+
+            <textarea
+                id="duplicateDescription"
+                class="modal-textarea"></textarea>
 
         </div>
 
@@ -5228,6 +5528,52 @@ function saveCategoryOrder(order) {
     } catch (e) {}
 
 }
+
+
+/* ============================================================
+   LOOP SEARCH ANIMATION SETTING (persisted across reloads)
+   Controls whether the matching-category shine (categorySearchSweep)
+   keeps looping for as long as a search is active, or only plays
+   once per search. On by default (current/original behavior).
+============================================================ */
+
+const LOOP_SEARCH_ANIMATION_KEY = "workDashboardLoopSearchAnimation";
+
+function loadLoopSearchAnimation() {
+
+    try {
+
+        const raw =
+            localStorage.getItem(
+                LOOP_SEARCH_ANIMATION_KEY
+            );
+
+        return raw === null ? true : raw === "true";
+
+    } catch (e) {
+
+        return true;
+
+    }
+
+}
+
+
+function saveLoopSearchAnimation(value) {
+
+    try {
+
+        localStorage.setItem(
+            LOOP_SEARCH_ANIMATION_KEY,
+            value ? "true" : "false"
+        );
+
+    } catch (e) {}
+
+}
+
+
+let loopSearchAnimation = loadLoopSearchAnimation();
 
 
 /* ============================================================
@@ -6164,10 +6510,26 @@ function createCategory(
     const isSearching =
         !!(state.search && state.search.trim());
 
+    // Looping: the shine's position wraps every 5s (modulo) so an
+    // infinite CSS loop always resumes exactly where it should be
+    // across re-renders. Non-looping: no modulo — once real elapsed
+    // time passes 5s, that raw (very negative) delay puts the
+    // single-iteration animation permanently past its own end, so
+    // with fill-mode:forwards it just stays on its final (invisible)
+    // frame from then on, however many more times this re-renders.
     const shineDelayMs =
         isSearching && searchShineStartTime
-            ? -((Date.now() - searchShineStartTime) % SEARCH_SHINE_DURATION_MS)
+            ? (
+                loopSearchAnimation
+                    ? -((Date.now() - searchShineStartTime) % SEARCH_SHINE_DURATION_MS)
+                    : -(Date.now() - searchShineStartTime)
+              )
             : 0;
+
+    const shineClass =
+        isSearching
+            ? (loopSearchAnimation ? "category-searching" : "category-searching-once")
+            : "";
 
 
     const expanded =
@@ -6190,7 +6552,7 @@ function createCategory(
                 category
                 ${expanded ? "" : "collapsed"}
                 ${isGenuinelyEmpty ? "category-empty" : ""}
-                ${isSearching ? "category-searching" : ""}
+                ${shineClass}
             "
             ${isSearching ? `style="--shine-delay: ${shineDelayMs}ms;"` : ""}
             data-category="${escapeHTML(
@@ -6777,6 +7139,12 @@ function populateCombinedList(
 }
 
 
+// Element IDs (of .option-list containers) currently in "show all"
+// mode — toggled by the eye button next to a .dropdown-search input,
+// so the full list of categories/tags is one click away instead of
+// only appearing once you start typing.
+const showAllOptionLists = new Set();
+
 function applyOptionSearch(elementId) {
 
     const input =
@@ -6794,6 +7162,9 @@ function applyOptionSearch(elementId) {
             .trim()
             .toLowerCase();
 
+    const showAll =
+        showAllOptionLists.has(elementId);
+
 
     const target =
         document.getElementById(
@@ -6805,10 +7176,13 @@ function applyOptionSearch(elementId) {
         .forEach(option => {
 
             option.style.display =
-                query &&
-                option.textContent
-                    .toLowerCase()
-                    .includes(query)
+                showAll ||
+                (
+                    query &&
+                    option.textContent
+                        .toLowerCase()
+                        .includes(query)
+                )
                     ? "flex"
                     : "none";
 
@@ -6823,9 +7197,54 @@ function applyOptionSearch(elementId) {
     if (hint) {
 
         hint.style.display =
-            query ? "none" : "block";
+            (showAll || query) ? "none" : "block";
 
     }
+
+
+    const eyeButton =
+        document.querySelector(
+            `.search-eye-btn[data-search-target="${elementId}"]`
+        );
+
+    if (eyeButton) {
+
+        eyeButton.classList.toggle(
+            "active",
+            showAll
+        );
+
+    }
+
+}
+
+// Flips a list between "only show what matches the typed search" and
+// "show everything, ignore the search" — the eye button's whole job.
+// Clearing the input when turning show-all on avoids a confusing
+// state where the box still has old search text but every option is
+// visible anyway.
+function toggleShowAllOptions(elementId) {
+
+    const input =
+        document.querySelector(
+            `.dropdown-search[data-search-target="${elementId}"]`
+        );
+
+    if (showAllOptionLists.has(elementId)) {
+
+        showAllOptionLists.delete(elementId);
+
+    } else {
+
+        showAllOptionLists.add(elementId);
+
+        if (input) {
+            input.value = "";
+        }
+
+    }
+
+    applyOptionSearch(elementId);
 
 }
 
@@ -7144,6 +7563,81 @@ function flashCardNameGlow(resourceId) {
 
 }
 
+// Same idea as flashCardNameGlow, but for whichever OTHER field on a
+// card just changed — description, a newly-added tag, or the link
+// (which glows the preview + copy buttons instead of any text, since
+// the URL itself isn't shown on the card face).
+function flashDescriptionGlow(resourceId) {
+
+    const descriptionEl =
+        document.querySelector(
+            `article.card[data-resource-id="${resourceId}"] .description`
+        );
+
+    if (!descriptionEl) {
+        return;
+    }
+
+    descriptionEl.classList.add("name-flash-yellow");
+
+    setTimeout(
+        () => descriptionEl.classList.remove("name-flash-yellow"),
+        1800
+    );
+
+}
+
+function flashTagGlow(resourceId, tag) {
+
+    const tagEl =
+        document.querySelector(
+            `article.card[data-resource-id="${resourceId}"] .tag[data-tag="${CSS.escape(tag)}"]`
+        );
+
+    if (!tagEl) {
+        return;
+    }
+
+    tagEl.classList.add("tag-flash-yellow");
+
+    setTimeout(
+        () => tagEl.classList.remove("tag-flash-yellow"),
+        1800
+    );
+
+}
+
+function flashLinkGlow(resourceId) {
+
+    const card =
+        document.querySelector(
+            `article.card[data-resource-id="${resourceId}"]`
+        );
+
+    if (!card) {
+        return;
+    }
+
+    [
+        card.querySelector(".copy-btn"),
+        card.querySelector(".preview-btn")
+    ].forEach(button => {
+
+        if (!button) {
+            return;
+        }
+
+        button.classList.add("link-flash-yellow");
+
+        setTimeout(
+            () => button.classList.remove("link-flash-yellow"),
+            1800
+        );
+
+    });
+
+}
+
 
 function flashSortButtonGlow(category) {
 
@@ -7191,6 +7685,12 @@ document
 
 
             if (!wasOpen) {
+
+                // Refresh the list right before showing it, so a
+                // category or tag added earlier in the session (the
+                // list is otherwise only rebuilt when the main search
+                // box is used) is there the first time you open this.
+                populateFilterUI();
 
                 dropdown.classList.add(
                     "open"
@@ -8391,6 +8891,30 @@ document
     );
 
 
+document.getElementById(
+    "loopSearchAnimationToggle"
+).checked = loopSearchAnimation;
+
+document
+    .getElementById("loopSearchAnimationToggle")
+    .addEventListener(
+        "change",
+        event => {
+
+            loopSearchAnimation = event.target.checked;
+
+            saveLoopSearchAnimation(
+                loopSearchAnimation
+            );
+
+            // Re-render so a category currently mid-search picks up
+            // the new looping/one-shot behavior right away.
+            render();
+
+        }
+    );
+
+
 let backupFilePickerSafetyTimer = null;
 let activeImportLoadingElements = [];
 
@@ -8606,8 +9130,33 @@ document
                 "input",
                 () => {
 
+                    // Typing always means "search", so it takes over
+                    // from show-all rather than being ignored by it.
+                    showAllOptionLists.delete(
+                        input.dataset.searchTarget
+                    );
+
                     applyOptionSearch(
                         input.dataset.searchTarget
+                    );
+
+                }
+            );
+
+        }
+    );
+
+document
+    .querySelectorAll(".search-eye-btn")
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    toggleShowAllOptions(
+                        button.dataset.searchTarget
                     );
 
                 }
@@ -8965,13 +9514,43 @@ document
 
             if (removeBtn) {
 
-                editTagsSelected =
-                    editTagsSelected.filter(
-                        tag =>
-                            tag !== removeBtn.dataset.tag
+                const tagToRemove =
+                    removeBtn.dataset.tag;
+
+                const chipEl =
+                    removeBtn.closest(".tag-chip");
+
+                if (chipEl) {
+
+                    // Play the red fade/shrink first, then actually
+                    // drop it from the selection once it's done.
+                    chipEl.classList.add(
+                        "tag-chip-removing"
                     );
 
-                renderEditTagsChips();
+                    setTimeout(() => {
+
+                        editTagsSelected =
+                            editTagsSelected.filter(
+                                tag =>
+                                    tag !== tagToRemove
+                            );
+
+                        renderEditTagsChips();
+
+                    }, 320);
+
+                } else {
+
+                    editTagsSelected =
+                        editTagsSelected.filter(
+                            tag =>
+                                tag !== tagToRemove
+                        );
+
+                    renderEditTagsChips();
+
+                }
 
                 return;
 
@@ -9237,6 +9816,16 @@ document
             }
 
 
+            // Snapshot the old values first — after saving, comparing
+            // against these is how we know exactly which field(s)
+            // changed, so only THOSE glow instead of always just the
+            // name.
+            const oldName = resource.name;
+            const oldUrl = resource.url;
+            const oldDescription = resource.description || "";
+            const oldTags = (resource.tags || []).slice();
+
+
             resource.name =
                 document.getElementById(
                     "editName"
@@ -9272,11 +9861,37 @@ document
             );
 
 
+            const nameChanged = resource.name !== oldName;
+            const urlChanged = resource.url !== oldUrl;
+            const descriptionChanged =
+                resource.description !== oldDescription;
+            const newlyAddedTags =
+                resource.tags.filter(
+                    tag => !oldTags.some(
+                        oldTag =>
+                            oldTag.toLowerCase() ===
+                            tag.toLowerCase()
+                    )
+                );
+
+
             render();
 
-            flashCardNameGlow(
-                resource.id
-            );
+            if (nameChanged) {
+                flashCardNameGlow(resource.id);
+            }
+
+            if (descriptionChanged) {
+                flashDescriptionGlow(resource.id);
+            }
+
+            newlyAddedTags.forEach(tag => {
+                flashTagGlow(resource.id, tag);
+            });
+
+            if (urlChanged) {
+                flashLinkGlow(resource.id);
+            }
 
         }
     );
@@ -10385,6 +11000,11 @@ function openCategoryPicker(
         .getElementById("categoryPickerModal")
         .classList.add("open");
 
+    // Re-apply the current show-all/eye-button state to the freshly
+    // rebuilt list (the innerHTML above just reset every option back
+    // to display:none).
+    applyOptionSearch("categoryPickerList");
+
     searchInput.focus();
 
 }
@@ -10930,23 +11550,44 @@ function deleteCardFlow(resourceId) {
         "Yes, delete",
         () => {
 
-            const index =
-                resources.findIndex(
-                    item =>
-                        item.id === resourceId
-                );
-
-            if (index !== -1) {
-                resources.splice(index, 1);
-            }
-
-
             document
                 .getElementById("editModal")
                 .classList.remove("open");
 
+            function finishDelete() {
 
-            render();
+                const index =
+                    resources.findIndex(
+                        item =>
+                            item.id === resourceId
+                    );
+
+                if (index !== -1) {
+                    resources.splice(index, 1);
+                }
+
+                render();
+
+            }
+
+            // Play the same red fade/shrink the tag chips use, on the
+            // whole card, before it's actually removed.
+            const cardEl =
+                document.querySelector(
+                    `article.card[data-resource-id="${resourceId}"]`
+                );
+
+            if (cardEl) {
+
+                cardEl.classList.add("card-deleting");
+
+                setTimeout(finishDelete, 400);
+
+            } else {
+
+                finishDelete();
+
+            }
 
         }
     );
@@ -11812,6 +12453,361 @@ function computeDuplicateNames(original) {
 }
 
 
+/* ============================================================
+   DUPLICATE — TAGS
+   Mirrors the edit modal's tag editor (editTagsSelected /
+   renderEditTagsChips / addEditTagToSelection / etc.) one-for-one,
+   just pointed at the duplicate modal's own fields and its own
+   selection array, so editing tags on a duplicate never touches the
+   original card's tags.
+============================================================ */
+
+let duplicateTagsSelected = [];
+
+
+function renderDuplicateTagsChips() {
+
+    const container =
+        document.getElementById(
+            "duplicateTagsChips"
+        );
+
+
+    const chipsHTML =
+        duplicateTagsSelected
+            .map(
+                tag => `
+
+                    <span class="tag-chip">
+                        ${escapeHTML(tag)}
+                        <button
+                            type="button"
+                            class="tag-chip-remove"
+                            data-tag="${escapeHTML(tag)}">
+                            &times;
+                        </button>
+                    </span>
+
+                `
+            )
+            .join("");
+
+
+    container.innerHTML =
+        chipsHTML +
+        `
+            <button
+                type="button"
+                class="tag-chip-add"
+                id="duplicateTagsAddButton"
+                title="Add a tag">
+                +
+            </button>
+        `;
+
+}
+
+
+function renderDuplicateTagsSuggestions() {
+
+    const input =
+        document.getElementById(
+            "duplicateTagsInput"
+        );
+
+    const query =
+        input.value.trim().toLowerCase();
+
+    const listEl =
+        document.getElementById(
+            "duplicateTagsSuggestions"
+        );
+
+
+    if (!query) {
+
+        listEl.innerHTML = "";
+        listEl.classList.remove("open");
+
+        return;
+
+    }
+
+
+    const matches =
+        getAllKnownTags().filter(
+            tag =>
+                !duplicateTagsSelected.some(
+                    sel =>
+                        sel.toLowerCase() ===
+                        tag.toLowerCase()
+                ) &&
+                tag.toLowerCase().includes(query)
+        );
+
+
+    if (!matches.length) {
+
+        listEl.innerHTML =
+            `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`;
+
+    } else {
+
+        listEl.innerHTML =
+            matches
+                .map(
+                    tag =>
+                        `<button type="button" class="autocomplete-option" data-value="${escapeHTML(tag)}">${escapeHTML(tag)}</button>`
+                )
+                .join("");
+
+    }
+
+    listEl.classList.add("open");
+
+}
+
+
+function addDuplicateTagToSelection(rawTag) {
+
+    const trimmed = stripTagSpaces(rawTag);
+
+    if (!trimmed) {
+        return;
+    }
+
+
+    const existingMatch =
+        getAllKnownTags().find(
+            tag =>
+                tag.toLowerCase() ===
+                trimmed.toLowerCase()
+        );
+
+    const finalTag =
+        existingMatch || trimmed;
+
+
+    if (
+        !duplicateTagsSelected.some(
+            tag =>
+                tag.toLowerCase() ===
+                finalTag.toLowerCase()
+        )
+    ) {
+        duplicateTagsSelected.push(finalTag);
+    }
+
+    renderDuplicateTagsChips();
+
+    const input =
+        document.getElementById(
+            "duplicateTagsInput"
+        );
+
+    input.value = "";
+    input.focus();
+
+    renderDuplicateTagsSuggestions();
+
+}
+
+
+document
+    .getElementById("duplicateTagsChips")
+    .addEventListener(
+        "click",
+        event => {
+
+            const removeBtn =
+                event.target.closest(
+                    ".tag-chip-remove"
+                );
+
+            if (removeBtn) {
+
+                const tagToRemove =
+                    removeBtn.dataset.tag;
+
+                const chipEl =
+                    removeBtn.closest(".tag-chip");
+
+                if (chipEl) {
+
+                    chipEl.classList.add(
+                        "tag-chip-removing"
+                    );
+
+                    setTimeout(() => {
+
+                        duplicateTagsSelected =
+                            duplicateTagsSelected.filter(
+                                tag =>
+                                    tag !== tagToRemove
+                            );
+
+                        renderDuplicateTagsChips();
+
+                    }, 320);
+
+                } else {
+
+                    duplicateTagsSelected =
+                        duplicateTagsSelected.filter(
+                            tag =>
+                                tag !== tagToRemove
+                        );
+
+                    renderDuplicateTagsChips();
+
+                }
+
+                return;
+
+            }
+
+
+            const addBtn =
+                event.target.closest(
+                    ".tag-chip-add"
+                );
+
+            if (addBtn) {
+
+                const box =
+                    document.getElementById(
+                        "duplicateTagsBox"
+                    );
+
+                box.style.display = "flex";
+
+                document
+                    .getElementById("duplicateTagsInput")
+                    .focus();
+
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("duplicateTagsInput")
+    .addEventListener(
+        "input",
+        () => {
+
+            const input =
+                document.getElementById("duplicateTagsInput");
+
+            if (/\s/.test(input.value)) {
+
+                const cursorPos =
+                    input.selectionStart;
+
+                const spacesBefore =
+                    (input.value.slice(0, cursorPos).match(/\s/g) || []).length;
+
+                input.value =
+                    stripTagSpaces(input.value);
+
+                const newPos =
+                    Math.max(0, cursorPos - spacesBefore);
+
+                input.setSelectionRange(newPos, newPos);
+
+            }
+
+            renderDuplicateTagsSuggestions();
+
+        }
+    );
+
+
+let duplicateTagsBlurTimeout = null;
+
+
+document
+    .getElementById("duplicateTagsInput")
+    .addEventListener(
+        "focus",
+        () => {
+
+            if (duplicateTagsBlurTimeout) {
+                clearTimeout(duplicateTagsBlurTimeout);
+                duplicateTagsBlurTimeout = null;
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("duplicateTagsInput")
+    .addEventListener(
+        "blur",
+        () => {
+
+            duplicateTagsBlurTimeout = setTimeout(() => {
+
+                document
+                    .getElementById("duplicateTagsSuggestions")
+                    .classList.remove("open");
+
+            }, 150);
+
+        }
+    );
+
+
+document
+    .getElementById("duplicateTagsInput")
+    .addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key !== "Enter" &&
+                event.key !== ","
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            addDuplicateTagToSelection(
+                document.getElementById(
+                    "duplicateTagsInput"
+                ).value
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("duplicateTagsSuggestions")
+    .addEventListener(
+        "click",
+        event => {
+
+            const option =
+                event.target.closest(
+                    ".autocomplete-option"
+                );
+
+            if (!option) {
+                return;
+            }
+
+            addDuplicateTagToSelection(
+                option.dataset.value
+            );
+
+        }
+    );
+
+
 function openDuplicateResourceModal(resource) {
 
     pendingDuplicateOriginalId = resource.id;
@@ -11830,6 +12826,39 @@ function openDuplicateResourceModal(resource) {
         document.getElementById("duplicateResourceUrl");
 
     urlInput.value = "";
+
+    document.getElementById(
+        "duplicateResourceName"
+    ).value = "";
+
+    // Tags and description start out as a copy of the original's, but
+    // are fully editable here — changing them only affects the new
+    // duplicate, never the original card.
+    duplicateTagsSelected =
+        (resource.tags || []).slice();
+
+    renderDuplicateTagsChips();
+
+    document
+        .getElementById("duplicateTagsBox")
+        .style.display = "none";
+
+    document.getElementById(
+        "duplicateTagsInput"
+    ).value = "";
+
+    document
+        .getElementById("duplicateTagsSuggestions")
+        .innerHTML = "";
+
+    document
+        .getElementById("duplicateTagsSuggestions")
+        .classList.remove("open");
+
+    document.getElementById(
+        "duplicateDescription"
+    ).value =
+        resource.description || "";
 
     const errorEl =
         document.getElementById("duplicateResourceUrlError");
@@ -11969,10 +12998,38 @@ document
             }
 
 
-            const { originalName, duplicateName } =
-                computeDuplicateNames(original);
+            const customName =
+                document
+                    .getElementById("duplicateResourceName")
+                    .value
+                    .trim();
 
-            original.name = originalName;
+            let duplicateName;
+
+            if (customName) {
+
+                // A name was typed in — use it exactly as given and
+                // leave the original card's name untouched entirely,
+                // skipping the auto-numbering logic below.
+                duplicateName = customName;
+
+            } else {
+
+                const names = computeDuplicateNames(original);
+                original.name = names.originalName;
+                duplicateName = names.duplicateName;
+
+            }
+
+
+            const newDescription =
+                document
+                    .getElementById("duplicateDescription")
+                    .value
+                    .trim();
+
+            const newTags =
+                [...duplicateTagsSelected];
 
 
             const nextId =
@@ -11987,14 +13044,14 @@ document
                 name: duplicateName,
                 category: original.category,
                 url: newUrl,
-                description: original.description,
-                tags: (original.tags || []).slice(),
+                description: newDescription,
+                tags: newTags,
                 createdAt: new Date().toISOString(),
                 editedAt: null,
                 uses: []
             });
 
-            registerTags(original.tags || []);
+            registerTags(newTags);
 
 
             pendingDuplicateOriginalId = null;
@@ -12003,8 +13060,14 @@ document
 
             render();
 
-            flashCardNameGlow(original.id);
+            // The original's name only actually changed when we went
+            // through the auto-numbering path above.
+            if (!customName) {
+                flashCardNameGlow(original.id);
+            }
+
             flashCardGlow(nextId);
+            flashCardNameGlow(nextId);
 
         }
     );
