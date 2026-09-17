@@ -5569,19 +5569,40 @@ function loadDashboardData() {
 
 }
 
+// render() calls saveDashboardData() on every re-render — typing in
+// the search box, expanding a category, anything — not just on real
+// edits. Tracking the content we last actually wrote lets us skip the
+// write (and the fresh timestamp, and the storage event it fires in
+// every other open tab) when nothing about it has changed since.
+let lastSavedDashboardContentJSON = null;
+
+
 function saveDashboardData() {
 
     try {
+
+        const payload = {
+            resources,
+            sort: state.sort,
+            tagRegistry: state.tagRegistry,
+            categoryView: state.categoryView
+        };
+
+        const contentJSON =
+            JSON.stringify(payload);
+
+        if (contentJSON === lastSavedDashboardContentJSON) {
+            return;
+        }
+
+        lastSavedDashboardContentJSON = contentJSON;
 
         const savedAt = Date.now();
 
         localStorage.setItem(
             DASHBOARD_DATA_KEY,
             JSON.stringify({
-                resources,
-                sort: state.sort,
-                tagRegistry: state.tagRegistry,
-                categoryView: state.categoryView,
+                ...payload,
                 savedAt
             })
         );
@@ -5637,10 +5658,52 @@ function hasNewerDashboardDataElsewhere() {
 
         const parsed = JSON.parse(raw);
 
-        return (
-            !!parsed.savedAt &&
-            parsed.savedAt > lastKnownDashboardSavedAt
-        );
+        if (
+            !parsed.savedAt ||
+            parsed.savedAt <= lastKnownDashboardSavedAt
+        ) {
+            return false;
+        }
+
+        // The timestamp moved, but render() saves on every re-render —
+        // not just on real edits — so two tabs just sitting open with
+        // nothing actually changing would otherwise keep re-triggering
+        // each other's reload forever (tab A reloads, which re-renders,
+        // which re-saves with a fresh timestamp, which tells tab B to
+        // reload, and so on). Only treat this as "there's something
+        // new" if the data itself is actually different from what's
+        // already sitting in memory here; a bumped timestamp with
+        // identical content just updates our bookmark and stops there.
+        const sameResources =
+            JSON.stringify(parsed.resources || []) ===
+            JSON.stringify(resources);
+
+        const sameSort =
+            JSON.stringify(parsed.sort || {}) ===
+            JSON.stringify(state.sort);
+
+        const sameTagRegistry =
+            JSON.stringify(parsed.tagRegistry || []) ===
+            JSON.stringify(state.tagRegistry);
+
+        const sameCategoryView =
+            JSON.stringify(parsed.categoryView || {}) ===
+            JSON.stringify(state.categoryView);
+
+        if (
+            sameResources &&
+            sameSort &&
+            sameTagRegistry &&
+            sameCategoryView
+        ) {
+
+            lastKnownDashboardSavedAt = parsed.savedAt;
+
+            return false;
+
+        }
+
+        return true;
 
     } catch (e) {
 
@@ -14609,6 +14672,20 @@ document
 ============================================================ */
 
 state.expandedCategories = [];
+
+// Baseline the "last saved" content to what we just loaded, before
+// the first render() call. Otherwise the first render always looks
+// "changed" (compared against nothing) and writes a fresh timestamp
+// on load alone — which, with another tab doing the same thing at
+// nearly the same time, is how two idle tabs end up reloading each
+// other back and forth.
+lastSavedDashboardContentJSON =
+    JSON.stringify({
+        resources,
+        sort: state.sort,
+        tagRegistry: state.tagRegistry,
+        categoryView: state.categoryView
+    });
 
 populateFilterUI();
 render();
