@@ -481,19 +481,24 @@ h1 {
 
     padding: 0 13px 0 38px;
 
-    border: 1px solid var(--border);
-    border-radius: 9px;
+    border: 1.5px solid rgba(255, 255, 255, .3);
+    border-radius: 999px;
 
     outline: none;
 
-    background: var(--surface);
+    background: var(--surface-soft);
     color: var(--text);
 
     font-size: 11px;
 
+    caret-color: var(--brand-yellow);
+
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+
     transition:
         border-color .15s ease,
-        background .15s ease;
+        background .15s ease,
+        box-shadow .15s ease;
 }
 
 .search-input::placeholder {
@@ -501,13 +506,14 @@ h1 {
 }
 
 .search-input:focus {
-    border-color: #3a3d38;
-    background: var(--surface-soft);
+    border-color: rgba(255, 255, 255, .55);
+    background: var(--surface-hover);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .08), 0 2px 12px rgba(0,0,0,.3);
 }
 
 .search-input.has-query {
     border-color: var(--brand-yellow);
-    box-shadow: 0 0 0 3px rgba(254, 242, 0, .18);
+    box-shadow: 0 0 0 3px rgba(254, 242, 0, .22), 0 2px 12px rgba(0,0,0,.3);
 }
 
 .tool-button {
@@ -2456,6 +2462,10 @@ h1 {
     margin-top: 18px;
 }
 
+.modal-actions.modal-actions-reversed {
+    flex-direction: row-reverse;
+}
+
 .modal-button {
     display: inline-flex;
     align-items: center;
@@ -2590,6 +2600,47 @@ h1 {
     background: var(--surface-hover);
     color: var(--brand-yellow);
     border-color: var(--brand-yellow);
+}
+
+/* "Show all tags" button that sits inside a tag-input-box (Add/Edit/
+   Duplicate), same idea as .search-eye-btn next to a dropdown-search
+   — reveals every known tag as a pickable list instead of only
+   showing matches once you start typing. */
+.tag-eye-btn {
+    flex-shrink: 0;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.tag-eye-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.tag-eye-btn:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
+.tag-eye-btn.active {
+    background: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+    color: var(--dark-text);
 }
 
 .edit-tags-empty {
@@ -3827,6 +3878,26 @@ h1 {
                     autocomplete="off"
                     placeholder="Search or add tags">
 
+                <button
+                    type="button"
+                    class="tag-eye-btn"
+                    id="editTagsEyeButton"
+                    title="Show all tags"
+                    aria-label="Show all tags">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+
+                    </svg>
+
+                </button>
+
             </div>
 
             <div
@@ -4554,6 +4625,26 @@ h1 {
                     autocomplete="off"
                     placeholder="Search or add tags">
 
+                <button
+                    type="button"
+                    class="tag-eye-btn"
+                    id="addTagsEyeButton"
+                    title="Show all tags"
+                    aria-label="Show all tags">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+
+                    </svg>
+
+                </button>
+
             </div>
 
             <div
@@ -4820,6 +4911,26 @@ h1 {
                     type="text"
                     autocomplete="off"
                     placeholder="Search or add tags">
+
+                <button
+                    type="button"
+                    class="tag-eye-btn"
+                    id="duplicateTagsEyeButton"
+                    title="Show all tags"
+                    aria-label="Show all tags">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+
+                    </svg>
+
+                </button>
 
             </div>
 
@@ -9334,6 +9445,7 @@ async function copyResource(
 
 let editingResourceId = null;
 let editTagsSelected = [];
+let editTagsShowAll = false;
 
 
 function updateEditCategoryDisplay(resource) {
@@ -9405,7 +9517,7 @@ function renderEditTagsSuggestions() {
         );
 
 
-    if (!query) {
+    if (!query && !editTagsShowAll) {
 
         listEl.innerHTML = "";
         listEl.classList.remove("open");
@@ -9423,14 +9535,16 @@ function renderEditTagsSuggestions() {
                         sel.toLowerCase() ===
                         tag.toLowerCase()
                 ) &&
-                tag.toLowerCase().includes(query)
+                (editTagsShowAll || tag.toLowerCase().includes(query))
         );
 
 
     if (!matches.length) {
 
         listEl.innerHTML =
-            `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`;
+            query
+                ? `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`
+                : `<div class="autocomplete-empty">No tags yet.</div>`;
 
     } else {
 
@@ -9447,6 +9561,33 @@ function renderEditTagsSuggestions() {
     listEl.classList.add("open");
 
 }
+
+
+function toggleEditTagsShowAll() {
+
+    editTagsShowAll = !editTagsShowAll;
+
+    if (editTagsShowAll) {
+        document.getElementById("editTagsInput").value = "";
+    }
+
+    document
+        .getElementById("editTagsEyeButton")
+        .classList.toggle("active", editTagsShowAll);
+
+    renderEditTagsSuggestions();
+
+    document.getElementById("editTagsInput").focus();
+
+}
+
+
+document
+    .getElementById("editTagsEyeButton")
+    .addEventListener(
+        "click",
+        toggleEditTagsShowAll
+    );
 
 
 function stripTagSpaces(rawTag) {
@@ -9586,6 +9727,13 @@ document
     .addEventListener(
         "input",
         () => {
+
+            if (editTagsShowAll) {
+                editTagsShowAll = false;
+                document
+                    .getElementById("editTagsEyeButton")
+                    .classList.remove("active");
+            }
 
             const input =
                 document.getElementById("editTagsInput");
@@ -9752,12 +9900,20 @@ function openEditModal(resource) {
         .getElementById("editTagsSuggestions")
         .classList.remove("open");
 
+    editTagsShowAll = false;
+
+    document
+        .getElementById("editTagsEyeButton")
+        .classList.remove("active");
+
 
     document.getElementById(
         "editModal"
     ).classList.add(
         "open"
     );
+
+    editFormSnapshot = getEditFormValues();
 
 }
 
@@ -10150,6 +10306,7 @@ document
 /* ---- tags chip input ---- */
 
 let addTagsSelected = [];
+let addTagsShowAll = false;
 
 
 function renderAddTagsChips() {
@@ -10231,7 +10388,7 @@ function renderAddTagsSuggestions() {
     const listEl =
         document.getElementById("addTagsSuggestions");
 
-    if (!query) {
+    if (!query && !addTagsShowAll) {
 
         listEl.innerHTML = "";
         listEl.classList.remove("open");
@@ -10247,14 +10404,16 @@ function renderAddTagsSuggestions() {
                 !addTagsSelected.some(
                     sel => sel.toLowerCase() === tag.toLowerCase()
                 ) &&
-                tag.toLowerCase().includes(query)
+                (addTagsShowAll || tag.toLowerCase().includes(query))
         );
 
 
     if (!matches.length) {
 
         listEl.innerHTML =
-            `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`;
+            query
+                ? `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`
+                : `<div class="autocomplete-empty">No tags yet.</div>`;
 
     } else {
 
@@ -10273,11 +10432,46 @@ function renderAddTagsSuggestions() {
 }
 
 
+function toggleAddTagsShowAll() {
+
+    addTagsShowAll = !addTagsShowAll;
+
+    if (addTagsShowAll) {
+        document.getElementById("addTagsInput").value = "";
+    }
+
+    document
+        .getElementById("addTagsEyeButton")
+        .classList.toggle("active", addTagsShowAll);
+
+    renderAddTagsSuggestions();
+
+    document.getElementById("addTagsInput").focus();
+
+}
+
+
+document
+    .getElementById("addTagsEyeButton")
+    .addEventListener(
+        "click",
+        toggleAddTagsShowAll
+    );
+
+
 document
     .getElementById("addTagsInput")
     .addEventListener(
         "input",
         () => {
+
+            // Typing means "search", so it takes over from show-all.
+            if (addTagsShowAll) {
+                addTagsShowAll = false;
+                document
+                    .getElementById("addTagsEyeButton")
+                    .classList.remove("active");
+            }
 
             const input =
                 document.getElementById("addTagsInput");
@@ -10440,6 +10634,11 @@ function openAddResourceModal(prefillCategory) {
     addTagsSelected = [];
     renderAddTagsChips();
 
+    addTagsShowAll = false;
+    document
+        .getElementById("addTagsEyeButton")
+        .classList.remove("active");
+
     document
         .getElementById("addCategorySuggestions")
         .classList.remove("open");
@@ -10480,6 +10679,8 @@ function openAddResourceModal(prefillCategory) {
     document
         .getElementById(prefillCategory ? "addName" : "addCategory")
         .focus();
+
+    addResourceFormSnapshot = getAddResourceFormValues();
 
 }
 
@@ -10885,6 +11086,20 @@ function openConfirmModal(
     ).textContent =
         options.cancelLabel || "Cancel";
 
+    document
+        .getElementById("confirmModalCancel")
+        .classList.toggle(
+            "primary",
+            options.cancelVariant === "primary"
+        );
+
+    document
+        .querySelector("#confirmModal .modal-actions")
+        .classList.toggle(
+            "modal-actions-reversed",
+            !!options.reverseButtons
+        );
+
 
     pendingConfirmAction = onConfirm;
 
@@ -10892,6 +11107,153 @@ function openConfirmModal(
     document
         .getElementById("confirmModal")
         .classList.add("open");
+
+}
+
+
+/* ============================================================
+   UNSAVED-CHANGES GUARD (Add / Edit / Duplicate resource, Edit
+   category, Edit tag)
+   Each of these modals snapshots its field values the moment it
+   opens. If the user then tries to dismiss the modal — backdrop
+   click, the X button, Cancel, or Escape — while the current values
+   no longer match that snapshot, we show a "you have made some
+   changes" prompt instead of silently discarding everything they
+   typed.
+============================================================ */
+
+let addResourceFormSnapshot = null;
+let editFormSnapshot = null;
+let duplicateFormSnapshot = null;
+let editCategoryFormSnapshot = null;
+let tagDetailFormSnapshot = null;
+
+
+function getAddResourceFormValues() {
+
+    return JSON.stringify({
+        name: document.getElementById("addName").value,
+        url: document.getElementById("addUrl").value,
+        category: document.getElementById("addCategory").value,
+        description: document.getElementById("addDescription").value,
+        tags: [...addTagsSelected].sort()
+    });
+
+}
+
+
+function getEditFormValues() {
+
+    return JSON.stringify({
+        name: document.getElementById("editName").value,
+        url: document.getElementById("editUrl").value,
+        description: document.getElementById("editDescription").value,
+        tags: [...editTagsSelected].sort()
+    });
+
+}
+
+
+function getDuplicateResourceFormValues() {
+
+    return JSON.stringify({
+        url: document.getElementById("duplicateResourceUrl").value,
+        name: document.getElementById("duplicateResourceName").value,
+        description: document.getElementById("duplicateDescription").value,
+        tags: [...duplicateTagsSelected].sort()
+    });
+
+}
+
+
+function isAddResourceFormDirty() {
+
+    return (
+        addResourceFormSnapshot !== null &&
+        getAddResourceFormValues() !== addResourceFormSnapshot
+    );
+
+}
+
+
+function isEditFormDirty() {
+
+    return (
+        editFormSnapshot !== null &&
+        getEditFormValues() !== editFormSnapshot
+    );
+
+}
+
+
+function isDuplicateResourceFormDirty() {
+
+    return (
+        duplicateFormSnapshot !== null &&
+        getDuplicateResourceFormValues() !== duplicateFormSnapshot
+    );
+
+}
+
+
+function getEditCategoryFormValues() {
+
+    return JSON.stringify({
+        name: document.getElementById("editCategoryNameInput").value
+    });
+
+}
+
+
+function getTagDetailFormValues() {
+
+    return JSON.stringify({
+        name: document.getElementById("tagDetailNameInput").value
+    });
+
+}
+
+
+function isEditCategoryFormDirty() {
+
+    return (
+        editCategoryFormSnapshot !== null &&
+        getEditCategoryFormValues() !== editCategoryFormSnapshot
+    );
+
+}
+
+
+function isTagDetailFormDirty() {
+
+    return (
+        tagDetailFormSnapshot !== null &&
+        getTagDetailFormValues() !== tagDetailFormSnapshot
+    );
+
+}
+
+
+function confirmDiscardIfDirty(isDirtyFn, onDiscard) {
+
+    if (!isDirtyFn()) {
+
+        onDiscard();
+
+        return;
+
+    }
+
+    openConfirmModal(
+        "You have made some changes",
+        "If you discard now, everything you've entered will be lost.",
+        "Discard changes",
+        onDiscard,
+        {
+            cancelLabel: "Continue editing",
+            reverseButtons: true
+        }
+    );
 
 }
 
@@ -11730,6 +12092,8 @@ function openTagDetailModal(tagName) {
         .getElementById("tagDetailModal")
         .classList.add("open");
 
+    tagDetailFormSnapshot = getTagDetailFormValues();
+
 }
 
 
@@ -12464,6 +12828,8 @@ function computeDuplicateNames(original) {
 
 let duplicateTagsSelected = [];
 
+let duplicateTagsShowAll = false;
+
 
 function renderDuplicateTagsChips() {
 
@@ -12524,7 +12890,7 @@ function renderDuplicateTagsSuggestions() {
         );
 
 
-    if (!query) {
+    if (!query && !duplicateTagsShowAll) {
 
         listEl.innerHTML = "";
         listEl.classList.remove("open");
@@ -12542,14 +12908,16 @@ function renderDuplicateTagsSuggestions() {
                         sel.toLowerCase() ===
                         tag.toLowerCase()
                 ) &&
-                tag.toLowerCase().includes(query)
+                (duplicateTagsShowAll || tag.toLowerCase().includes(query))
         );
 
 
     if (!matches.length) {
 
         listEl.innerHTML =
-            `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`;
+            query
+                ? `<div class="autocomplete-empty">No match — press Enter to add "${escapeHTML(input.value.trim())}".</div>`
+                : `<div class="autocomplete-empty">No tags yet.</div>`;
 
     } else {
 
@@ -12566,6 +12934,33 @@ function renderDuplicateTagsSuggestions() {
     listEl.classList.add("open");
 
 }
+
+
+function toggleDuplicateTagsShowAll() {
+
+    duplicateTagsShowAll = !duplicateTagsShowAll;
+
+    if (duplicateTagsShowAll) {
+        document.getElementById("duplicateTagsInput").value = "";
+    }
+
+    document
+        .getElementById("duplicateTagsEyeButton")
+        .classList.toggle("active", duplicateTagsShowAll);
+
+    renderDuplicateTagsSuggestions();
+
+    document.getElementById("duplicateTagsInput").focus();
+
+}
+
+
+document
+    .getElementById("duplicateTagsEyeButton")
+    .addEventListener(
+        "click",
+        toggleDuplicateTagsShowAll
+    );
 
 
 function addDuplicateTagToSelection(rawTag) {
@@ -12696,6 +13091,13 @@ document
     .addEventListener(
         "input",
         () => {
+
+            if (duplicateTagsShowAll) {
+                duplicateTagsShowAll = false;
+                document
+                    .getElementById("duplicateTagsEyeButton")
+                    .classList.remove("active");
+            }
 
             const input =
                 document.getElementById("duplicateTagsInput");
@@ -12855,6 +13257,12 @@ function openDuplicateResourceModal(resource) {
         .getElementById("duplicateTagsSuggestions")
         .classList.remove("open");
 
+    duplicateTagsShowAll = false;
+
+    document
+        .getElementById("duplicateTagsEyeButton")
+        .classList.remove("active");
+
     document.getElementById(
         "duplicateDescription"
     ).value =
@@ -12872,6 +13280,8 @@ function openDuplicateResourceModal(resource) {
         .classList.add("open");
 
     urlInput.focus();
+
+    duplicateFormSnapshot = getDuplicateResourceFormValues();
 
 }
 
@@ -12897,10 +13307,22 @@ function closeDuplicateResourceModal() {
         .getElementById("duplicateResourceUrlError")
         .classList.remove("visible");
 
+    duplicateFormSnapshot = null;
+
 }
 
 
 function handleDuplicateResourceCancel() {
+
+    confirmDiscardIfDirty(
+        isDuplicateResourceFormDirty,
+        proceedDuplicateResourceCancel
+    );
+
+}
+
+
+function proceedDuplicateResourceCancel() {
 
     const originalId =
         pendingDuplicateOriginalId;
@@ -13139,6 +13561,8 @@ function openEditCategoryModal(category) {
     document
         .getElementById("editCategoryModal")
         .classList.add("open");
+
+    editCategoryFormSnapshot = getEditCategoryFormValues();
 
 }
 
@@ -13485,6 +13909,87 @@ document
    MODAL CLOSE
 ============================================================ */
 
+// Add / Edit / Duplicate carry real typed-out form data, so dismissing
+// them isn't a plain "remove the open class" — it has to go through the
+// unsaved-changes guard first. Everything else closes the same way it
+// always has.
+function closeModalGuarded(modalId) {
+
+    if (modalId === "addResourceModal") {
+
+        confirmDiscardIfDirty(
+            isAddResourceFormDirty,
+            () => {
+                document
+                    .getElementById("addResourceModal")
+                    .classList.remove("open");
+            }
+        );
+
+        return;
+
+    }
+
+    if (modalId === "editModal") {
+
+        confirmDiscardIfDirty(
+            isEditFormDirty,
+            () => {
+                document
+                    .getElementById("editModal")
+                    .classList.remove("open");
+            }
+        );
+
+        return;
+
+    }
+
+    if (modalId === "duplicateResourceModal") {
+
+        handleDuplicateResourceCancel();
+
+        return;
+
+    }
+
+    if (modalId === "editCategoryModal") {
+
+        confirmDiscardIfDirty(
+            isEditCategoryFormDirty,
+            () => {
+                document
+                    .getElementById("editCategoryModal")
+                    .classList.remove("open");
+            }
+        );
+
+        return;
+
+    }
+
+    if (modalId === "tagDetailModal") {
+
+        confirmDiscardIfDirty(
+            isTagDetailFormDirty,
+            () => {
+                document
+                    .getElementById("tagDetailModal")
+                    .classList.remove("open");
+            }
+        );
+
+        return;
+
+    }
+
+    document
+        .getElementById(modalId)
+        .classList.remove("open");
+
+}
+
+
 document
     .querySelectorAll(
         "[data-close-modal]"
@@ -13496,13 +14001,9 @@ document
                 "click",
                 () => {
 
-                    document
-                        .getElementById(
-                            button.dataset.closeModal
-                        )
-                        .classList.remove(
-                            "open"
-                        );
+                    closeModalGuarded(
+                        button.dataset.closeModal
+                    );
 
                 }
             );
@@ -13527,8 +14028,8 @@ document
                         backdrop
                     ) {
 
-                        backdrop.classList.remove(
-                            "open"
+                        closeModalGuarded(
+                            backdrop.id
                         );
 
                     }
@@ -13546,6 +14047,41 @@ document.addEventListener(
 
         if (event.key !== "Escape") {
             return;
+        }
+
+
+        // If our own confirm dialog (or any other) is the thing on
+        // top, Escape should just dismiss that — not blow past it and
+        // take the form underneath with it.
+        const confirmModalEl =
+            document.getElementById("confirmModal");
+
+        if (confirmModalEl.classList.contains("open")) {
+
+            confirmModalEl.classList.remove("open");
+
+            pendingConfirmAction = null;
+
+            return;
+
+        }
+
+
+        const guardedOpenModal =
+            ["addResourceModal", "editModal", "duplicateResourceModal", "editCategoryModal", "tagDetailModal"]
+                .find(
+                    modalId =>
+                        document
+                            .getElementById(modalId)
+                            .classList.contains("open")
+                );
+
+        if (guardedOpenModal) {
+
+            closeModalGuarded(guardedOpenModal);
+
+            return;
+
         }
 
 
