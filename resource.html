@@ -5573,15 +5573,20 @@ function saveDashboardData() {
 
     try {
 
+        const savedAt = Date.now();
+
         localStorage.setItem(
             DASHBOARD_DATA_KEY,
             JSON.stringify({
                 resources,
                 sort: state.sort,
                 tagRegistry: state.tagRegistry,
-                categoryView: state.categoryView
+                categoryView: state.categoryView,
+                savedAt
             })
         );
+
+        lastKnownDashboardSavedAt = savedAt;
 
     } catch (e) {}
 
@@ -5599,6 +5604,98 @@ const resources =
     Array.isArray(savedDashboardData.resources)
         ? savedDashboardData.resources
         : SAMPLE_RESOURCES;
+
+
+/* ============================================================
+   CROSS-WINDOW SYNC
+   The chest is plain localStorage, so two windows/tabs open on this
+   page each hold their own in-memory snapshot of it. If one of them
+   adds/edits/deletes something, the others don't know until they
+   look — so when the person switches back to one, check whether the
+   data on disk is newer than what this tab last loaded or saved, and
+   if so, reload to pick it up. We never do this out from under an
+   open modal (including our own "unsaved changes" prompt) — it just
+   waits and re-checks the next time this tab is focused again.
+============================================================ */
+
+let lastKnownDashboardSavedAt =
+    (savedDashboardData && savedDashboardData.savedAt) || 0;
+
+
+function hasNewerDashboardDataElsewhere() {
+
+    try {
+
+        const raw =
+            localStorage.getItem(
+                DASHBOARD_DATA_KEY
+            );
+
+        if (!raw) {
+            return false;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        return (
+            !!parsed.savedAt &&
+            parsed.savedAt > lastKnownDashboardSavedAt
+        );
+
+    } catch (e) {
+
+        return false;
+
+    }
+
+}
+
+
+function reloadIfChestUpdatedElsewhere() {
+
+    if (!hasNewerDashboardDataElsewhere()) {
+        return;
+    }
+
+    if (document.querySelector(".modal-backdrop.open")) {
+        return;
+    }
+
+    location.reload();
+
+}
+
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (document.visibilityState === "visible") {
+            reloadIfChestUpdatedElsewhere();
+        }
+
+    }
+);
+
+window.addEventListener(
+    "focus",
+    reloadIfChestUpdatedElsewhere
+);
+
+// Fires in every OTHER open tab/window of this page the instant one
+// of them saves — lets a window that's visible but not focused (e.g.
+// two windows open side by side) pick up the change right away
+// instead of waiting for an explicit focus.
+window.addEventListener(
+    "storage",
+    event => {
+
+        if (event.key === DASHBOARD_DATA_KEY) {
+            reloadIfChestUpdatedElsewhere();
+        }
+
+    }
+);
 
 
 /* ============================================================
