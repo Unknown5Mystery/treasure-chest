@@ -1889,6 +1889,11 @@ h1 {
     pointer-events: none;
 }
 
+.category.category-deleting {
+    animation: cardFadeOutRed .4s ease forwards;
+    pointer-events: none;
+}
+
 .card-glow-yellow {
     box-shadow:
         0 0 0 2px var(--brand-yellow),
@@ -5716,7 +5721,17 @@ function hasNewerDashboardDataElsewhere() {
 
 function reloadIfChestUpdatedElsewhere() {
 
-    if (!hasNewerDashboardDataElsewhere()) {
+    // Both checks carry their own "nothing actually different, just
+    // update the bookmark" bookkeeping (see hasNewerDashboardData
+    // Elsewhere above and hasNewerCategoryOrderElsewhere below), so
+    // both always run rather than short-circuiting on the first hit.
+    const dashboardChanged =
+        hasNewerDashboardDataElsewhere();
+
+    const categoryOrderChanged =
+        hasNewerCategoryOrderElsewhere();
+
+    if (!dashboardChanged && !categoryOrderChanged) {
         return;
     }
 
@@ -5753,7 +5768,10 @@ window.addEventListener(
     "storage",
     event => {
 
-        if (event.key === DASHBOARD_DATA_KEY) {
+        if (
+            event.key === DASHBOARD_DATA_KEY ||
+            event.key === CATEGORY_ORDER_KEY
+        ) {
             reloadIfChestUpdatedElsewhere();
         }
 
@@ -5767,7 +5785,7 @@ window.addEventListener(
 
 const CATEGORY_ORDER_KEY = "workDashboardCategoryOrder";
 
-function loadCategoryOrder() {
+function loadCategoryOrderRaw() {
 
     try {
 
@@ -5776,27 +5794,134 @@ function loadCategoryOrder() {
                 CATEGORY_ORDER_KEY
             );
 
-        return raw ? JSON.parse(raw) : [];
+        return raw ? JSON.parse(raw) : null;
 
     } catch (e) {
 
-        return [];
+        return null;
 
     }
 
 }
+
+// A plain array is the old, pre-sync storage format (just the order,
+// no timestamp) — still what's sitting in localStorage for anyone who
+// had this open before. { order, savedAt } is the current format.
+// Reading always accepts either; writing always uses the current one.
+const savedCategoryOrderData =
+    loadCategoryOrderRaw();
+
+function loadCategoryOrder() {
+
+    if (!savedCategoryOrderData) {
+        return [];
+    }
+
+    if (Array.isArray(savedCategoryOrderData)) {
+        return savedCategoryOrderData;
+    }
+
+    return Array.isArray(savedCategoryOrderData.order)
+        ? savedCategoryOrderData.order
+        : [];
+
+}
+
+
+let lastKnownCategoryOrderSavedAt =
+    (savedCategoryOrderData &&
+        !Array.isArray(savedCategoryOrderData) &&
+        savedCategoryOrderData.savedAt) ||
+    0;
+
+// Tracks the order we last actually wrote (or loaded), so a
+// no-op save doesn't bump the timestamp and send every other open
+// tab a "something changed" signal for nothing.
+let lastSavedCategoryOrderJSON =
+    JSON.stringify(loadCategoryOrder());
 
 
 function saveCategoryOrder(order) {
 
     try {
 
+        const orderJSON =
+            JSON.stringify(order);
+
+        if (orderJSON === lastSavedCategoryOrderJSON) {
+            return;
+        }
+
+        lastSavedCategoryOrderJSON = orderJSON;
+
+        const savedAt = Date.now();
+
         localStorage.setItem(
             CATEGORY_ORDER_KEY,
-            JSON.stringify(order)
+            JSON.stringify({
+                order,
+                savedAt
+            })
         );
 
+        lastKnownCategoryOrderSavedAt = savedAt;
+
     } catch (e) {}
+
+}
+
+
+function hasNewerCategoryOrderElsewhere() {
+
+    try {
+
+        const raw =
+            localStorage.getItem(
+                CATEGORY_ORDER_KEY
+            );
+
+        if (!raw) {
+            return false;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        const order =
+            Array.isArray(parsed)
+                ? parsed
+                : (Array.isArray(parsed.order) ? parsed.order : []);
+
+        const savedAt =
+            Array.isArray(parsed)
+                ? 0
+                : (parsed.savedAt || 0);
+
+        if (
+            !savedAt ||
+            savedAt <= lastKnownCategoryOrderSavedAt
+        ) {
+            return false;
+        }
+
+        const sameOrder =
+            JSON.stringify(order) ===
+            JSON.stringify(state.categoryOrder);
+
+        if (sameOrder) {
+
+            lastKnownCategoryOrderSavedAt = savedAt;
+
+            return false;
+
+        }
+
+        return true;
+
+    } catch (e) {
+
+        return false;
+
+    }
 
 }
 
@@ -11952,29 +12077,59 @@ function deleteCategoryFlow(category) {
             "Yes, delete",
             () => {
 
-                delete state.sort[
-                    category
-                ];
-
-                state.categoryOrder =
-                    state.categoryOrder.filter(
-                        item =>
-                            item !== category
-                    );
-
-                state.expandedCategories =
-                    state.expandedCategories.filter(
-                        item =>
-                            item !== category
-                    );
-
-
                 document
                     .getElementById("editCategoryModal")
                     .classList.remove("open");
 
 
-                render();
+                function finishDelete() {
+
+                    delete state.sort[
+                        category
+                    ];
+
+                    state.categoryOrder =
+                        state.categoryOrder.filter(
+                            item =>
+                                item !== category
+                        );
+
+                    saveCategoryOrder(
+                        state.categoryOrder
+                    );
+
+                    state.expandedCategories =
+                        state.expandedCategories.filter(
+                            item =>
+                                item !== category
+                        );
+
+
+                    render();
+
+                }
+
+                // Same red fade/shrink deleteCardFlow plays on a card,
+                // here on the whole category section, before it's
+                // actually removed.
+                const categoryEl =
+                    document.querySelector(
+                        `section.category[data-category="${CSS.escape(category)}"]`
+                    );
+
+                if (categoryEl) {
+
+                    categoryEl.classList.add(
+                        "category-deleting"
+                    );
+
+                    setTimeout(finishDelete, 400);
+
+                } else {
+
+                    finishDelete();
+
+                }
 
             }
         );
@@ -12003,46 +12158,77 @@ function deleteCategoryFlow(category) {
                 destinations,
                 destination => {
 
-                    resources.forEach(
-                        resource => {
-
-                            if (
-                                resource.category ===
-                                category
-                            ) {
-
-                                resource.category =
-                                    destination;
-
-                            }
-
-                        }
-                    );
-
-
-                    delete state.sort[
-                        category
-                    ];
-
-                    state.categoryOrder =
-                        state.categoryOrder.filter(
-                            item =>
-                                item !== category
-                        );
-
-                    state.expandedCategories =
-                        state.expandedCategories.filter(
-                            item =>
-                                item !== category
-                        );
-
-
                     document
                         .getElementById("editCategoryModal")
                         .classList.remove("open");
 
 
-                    render();
+                    function finishDelete() {
+
+                        resources.forEach(
+                            resource => {
+
+                                if (
+                                    resource.category ===
+                                    category
+                                ) {
+
+                                    resource.category =
+                                        destination;
+
+                                }
+
+                            }
+                        );
+
+
+                        delete state.sort[
+                            category
+                        ];
+
+                        state.categoryOrder =
+                            state.categoryOrder.filter(
+                                item =>
+                                    item !== category
+                            );
+
+                        saveCategoryOrder(
+                            state.categoryOrder
+                        );
+
+                        state.expandedCategories =
+                            state.expandedCategories.filter(
+                                item =>
+                                    item !== category
+                            );
+
+
+                        render();
+
+                    }
+
+                    // Same red fade/shrink deleteCardFlow plays on a
+                    // card, here on the whole category section, before
+                    // its cards are actually moved out and it's
+                    // removed.
+                    const categoryEl =
+                        document.querySelector(
+                            `section.category[data-category="${CSS.escape(category)}"]`
+                        );
+
+                    if (categoryEl) {
+
+                        categoryEl.classList.add(
+                            "category-deleting"
+                        );
+
+                        setTimeout(finishDelete, 400);
+
+                    } else {
+
+                        finishDelete();
+
+                    }
 
                 }
             );
