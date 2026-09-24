@@ -462,7 +462,14 @@ h1 {
     flex: 1;
 }
 
-.search-wrap svg {
+/* Scoped to just the magnifying-glass icon (.search-icon), not every
+   svg in .search-wrap — a plain ".search-wrap svg" descendant selector
+   used to also catch the clear "x" and trash icons added later, and
+   since it and their own rules have equal specificity, whichever
+   property THEIR rule didn't redeclare (position, left, transform,
+   pointer-events...) quietly fell back to this one, knocking those
+   icons out of their buttons' flex-centered layout entirely. */
+.search-wrap .search-icon {
     position: absolute;
     left: 13px;
     top: 50%;
@@ -479,7 +486,7 @@ h1 {
     width: 100%;
     height: 40px;
 
-    padding: 0 13px 0 38px;
+    padding: 0 44px 0 38px;
 
     border: 1.5px solid rgba(255, 255, 255, .3);
     border-radius: 999px;
@@ -514,6 +521,87 @@ h1 {
 .search-input.has-query {
     border-color: var(--brand-yellow);
     box-shadow: 0 0 0 3px rgba(254, 242, 0, .22), 0 2px 12px rgba(0,0,0,.3);
+}
+
+.search-clear-btn {
+    display: none;
+
+    position: absolute;
+    left: 38px;    /* recalculated in JS to sit just past the typed text */
+    top: 50%;
+    transform: translateY(-50%);
+
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+
+    background: var(--surface-hover);
+    color: var(--soft);
+
+    cursor: pointer;
+
+    transition:
+        background .15s ease,
+        color .15s ease;
+}
+
+.search-clear-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.search-clear-btn.visible {
+    display: flex;
+}
+
+.search-clear-btn:hover {
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+}
+
+/* Deliberately no border/background here, at rest or on hover — a
+   circular chip that close to the pill's own rounded end just reads as
+   two curves colliding in the same corner. Matching the plain magnifying-
+   glass icon's treatment on the left (same size, same distance from the
+   edge, no chrome) keeps the pill itself as the only rounded outline in
+   the bar. */
+.search-trash-btn {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    padding: 0;
+    border: none;
+    background: none;
+
+    color: var(--muted);
+
+    cursor: pointer;
+
+    transition: color .15s ease;
+}
+
+.search-trash-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.search-trash-btn:hover {
+    color: var(--brand-yellow);
 }
 
 .tool-button {
@@ -1081,6 +1169,97 @@ h1 {
     border-radius: 9px;
 
     background: var(--surface-soft);
+}
+
+/* The drag-reorder list inside the Drag to… modal — every category
+   in site order, one row under the next. Same shell as
+   #categoryPickerList so the two feel like the same picker family. */
+.category-drag-list {
+    max-height: 320px;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    padding: 5px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: #181918;
+}
+
+.category-drag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 9px;
+
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    color: var(--text);
+    background: transparent;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    user-select: none;
+
+    /* The live reorder (dragover swapping rows via insertBefore/after)
+       is animated in JS with a FLIP transform on every row it displaces
+       — this transition is what makes that slide smooth instead of a
+       hard snap. Opacity/shadow/color cover the dragged row's own
+       lift and highlight. */
+    transition:
+        transform .18s cubic-bezier(.2,.8,.3,1),
+        opacity .12s ease,
+        box-shadow .15s ease,
+        border-color .15s ease,
+        color .15s ease,
+        background .15s ease;
+
+    will-change: transform;
+}
+
+/* Every draggable row (the one category "Drag to…" was opened from,
+   or — from the toolbar's Reorder button — all of them) looks plain
+   at rest; only cursor:grab hints it can be picked up. Color is
+   reserved for .dragging below, so with several rows draggable at
+   once it's always obvious which single one is actually being moved
+   right now rather than everything lighting up at the same time. */
+.category-drag-row.draggable {
+    cursor: grab;
+}
+
+.category-drag-row.draggable:active {
+    cursor: grabbing;
+}
+
+.category-drag-row.dragging {
+    opacity: .92;
+
+    border-color: var(--brand-yellow);
+    color: var(--brand-yellow);
+    background: rgba(254,242,0,.1);
+
+    box-shadow: 0 8px 18px rgba(0,0,0,.35);
+
+    /* Sits on top of whichever row it's currently being dragged over,
+       so the lift shadow above never gets visually clipped by a
+       neighboring row's own background/border. */
+    position: relative;
+    z-index: 1;
+}
+
+.category-drag-handle {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+
+    color: inherit;
 }
 
 .category-position-row {
@@ -2648,6 +2827,40 @@ h1 {
     color: var(--dark-text);
 }
 
+/* Closes the tag-input-box itself (Edit/Duplicate — Add's box has no
+   toggle to close, it's just part of that form). Same shape as
+   .tag-eye-btn so the two sit together as a matched pair. */
+.tag-box-close-btn {
+    flex-shrink: 0;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.tag-box-close-btn svg {
+    width: 11px;
+    height: 11px;
+}
+
+.tag-box-close-btn:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+    border-color: var(--brand-yellow);
+}
+
 .edit-tags-empty {
     color: var(--soft);
     font-size: 10px;
@@ -3218,17 +3431,6 @@ h1 {
                 Export all resources
             </button>
 
-            <div class="move-menu-divider"></div>
-
-            <label
-                class="move-row settings-toggle-row"
-                for="loopSearchAnimationToggle">
-                <span>Loop search animation</span>
-                <input
-                    type="checkbox"
-                    id="loopSearchAnimationToggle">
-            </label>
-
         </div>
 
 
@@ -3428,6 +3630,7 @@ h1 {
             <div class="search-wrap">
 
                 <svg
+                    class="search-icon"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -3451,6 +3654,49 @@ h1 {
                     type="text"
                     placeholder="Search resources, URLs, categories, tags..."
                     autocomplete="off">
+
+                <button
+                    type="button"
+                    id="searchClearBtn"
+                    class="search-clear-btn"
+                    title="Clear search"
+                    aria-label="Clear search">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5">
+
+                        <path d="m6 6 12 12"></path>
+                        <path d="m18 6-12 12"></path>
+
+                    </svg>
+
+                </button>
+
+                <button
+                    type="button"
+                    id="searchTrashBtn"
+                    class="search-trash-btn"
+                    title="Clear search"
+                    aria-label="Clear search">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8">
+
+                        <path d="M4 7h16"></path>
+                        <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path>
+                        <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+
+                    </svg>
+
+                </button>
 
             </div>
 
@@ -3565,6 +3811,33 @@ h1 {
                 </div>
 
             </div>
+
+
+            <button
+                class="tool-button"
+                id="categoryReorderButton"
+                title="Drag categories into a new order">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="M8 6h12"></path>
+                    <path d="M8 12h9"></path>
+                    <path d="M8 18h6"></path>
+
+                    <path d="M4 5v14"></path>
+                    <path d="m2 7 2-2 2 2"></path>
+
+                </svg>
+
+                <span>
+                    Reorder
+                </span>
+
+            </button>
 
 
         </div>
@@ -3767,15 +4040,18 @@ h1 {
                             stroke-width="1.8">
 
                             <rect
-                                x="9"
-                                y="9"
-                                width="12"
-                                height="12"
+                                x="3"
+                                y="5"
+                                width="13"
+                                height="13"
                                 rx="2">
                             </rect>
 
+                            <path d="M8 11.5h5"></path>
+                            <path d="M10.5 9v5"></path>
+
                             <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                d="M20 9v10a2 2 0 0 1-2 2H8">
                             </path>
 
                         </svg>
@@ -3876,6 +4152,26 @@ h1 {
                 class="tag-input-box"
                 id="editTagsBox"
                 style="display:none; margin-top:7px;">
+
+                <button
+                    type="button"
+                    class="tag-box-close-btn"
+                    id="editTagsCloseButton"
+                    title="Close"
+                    aria-label="Close tag box">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="m6 6 12 12"></path>
+                        <path d="m18 6-12 12"></path>
+
+                    </svg>
+
+                </button>
 
                 <input
                     id="editTagsInput"
@@ -4055,6 +4351,13 @@ h1 {
                     Insert at…
                 </button>
 
+                <button
+                    type="button"
+                    class="move-row"
+                    id="editCategoryMoveDrag">
+                    Drag to…
+                </button>
+
             </div>
 
         </div>
@@ -4156,6 +4459,87 @@ h1 {
                 </button>
 
             </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================================
+     CATEGORY DRAG-REORDER MODAL
+     Lists every category in the order it appears on the site.
+     Only the category being edited is draggable — the rest are just
+     the fixed backdrop it gets dragged past. Nothing is committed
+     until Save changes.
+=========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="categoryDragModal">
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <div class="modal-eyebrow">
+                    Drag to reorder
+                </div>
+
+                <h2
+                    class="modal-title"
+                    id="categoryDragModalTitle">
+                    Drag category
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                data-close-modal="categoryDragModal">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-field">
+
+            <div
+                class="category-drag-list"
+                id="categoryDragList">
+            </div>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="modal-button"
+                data-close-modal="categoryDragModal">
+                Cancel
+            </button>
+
+            <button
+                class="modal-button primary"
+                id="saveCategoryDragOrder">
+                Save changes
+            </button>
 
         </div>
 
@@ -4910,6 +5294,26 @@ h1 {
                 class="tag-input-box"
                 id="duplicateTagsBox"
                 style="display:none; margin-top:7px;">
+
+                <button
+                    type="button"
+                    class="tag-box-close-btn"
+                    id="duplicateTagsCloseButton"
+                    title="Close"
+                    aria-label="Close tag box">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path d="m6 6 12 12"></path>
+                        <path d="m18 6-12 12"></path>
+
+                    </svg>
+
+                </button>
 
                 <input
                     id="duplicateTagsInput"
@@ -5927,49 +6331,13 @@ function hasNewerCategoryOrderElsewhere() {
 
 
 /* ============================================================
-   LOOP SEARCH ANIMATION SETTING (persisted across reloads)
-   Controls whether the matching-category shine (categorySearchSweep)
-   keeps looping for as long as a search is active, or only plays
-   once per search. On by default (current/original behavior).
+   SEARCH ANIMATION
+   The matching-category shine (categorySearchSweep) always loops for
+   as long as a search is active — this used to be a settings toggle,
+   but looping is just how it behaves now, so it's a plain constant.
 ============================================================ */
 
-const LOOP_SEARCH_ANIMATION_KEY = "workDashboardLoopSearchAnimation";
-
-function loadLoopSearchAnimation() {
-
-    try {
-
-        const raw =
-            localStorage.getItem(
-                LOOP_SEARCH_ANIMATION_KEY
-            );
-
-        return raw === null ? true : raw === "true";
-
-    } catch (e) {
-
-        return true;
-
-    }
-
-}
-
-
-function saveLoopSearchAnimation(value) {
-
-    try {
-
-        localStorage.setItem(
-            LOOP_SEARCH_ANIMATION_KEY,
-            value ? "true" : "false"
-        );
-
-    } catch (e) {}
-
-}
-
-
-let loopSearchAnimation = loadLoopSearchAnimation();
+const loopSearchAnimation = true;
 
 
 /* ============================================================
@@ -6681,15 +7049,18 @@ function createCard(resource) {
                             stroke-width="1.8">
 
                             <rect
-                                x="9"
-                                y="9"
-                                width="12"
-                                height="12"
+                                x="3"
+                                y="5"
+                                width="13"
+                                height="13"
                                 rx="2">
                             </rect>
 
+                            <path d="M8 11.5h5"></path>
+                            <path d="M10.5 9v5"></path>
+
                             <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                d="M20 9v10a2 2 0 0 1-2 2H8">
                             </path>
 
                         </svg>
@@ -7288,6 +7659,85 @@ function createCategory(
 }
 
 
+// A drop-in replacement for a bare render() call, for the specific
+// actions that change the category list's own order (never for a
+// plain re-render like typing in search or expanding a category) —
+// it snapshots each category section's position first, then after
+// render() rebuilds the DOM, nudges every category that moved back to
+// its old spot with a transform and immediately transitions that
+// away, so the reorder reads as a slide instead of an instant snap.
+function animateCategoryReorder() {
+
+    const beforeRects = new Map();
+
+    document
+        .querySelectorAll(
+            "#resourceArea > .category[data-category]"
+        )
+        .forEach(
+            el =>
+                beforeRects.set(
+                    el.dataset.category,
+                    el.getBoundingClientRect()
+                )
+        );
+
+
+    render();
+
+
+    requestAnimationFrame(() => {
+
+        document
+            .querySelectorAll(
+                "#resourceArea > .category[data-category]"
+            )
+            .forEach(el => {
+
+                const before =
+                    beforeRects.get(
+                        el.dataset.category
+                    );
+
+                if (!before) {
+                    return;
+                }
+
+                const after =
+                    el.getBoundingClientRect();
+
+                const deltaX =
+                    before.left - after.left;
+
+                const deltaY =
+                    before.top - after.top;
+
+                if (!deltaX && !deltaY) {
+                    return;
+                }
+
+                el.style.transition = "none";
+                el.style.transform =
+                    `translate(${deltaX}px, ${deltaY}px)`;
+
+                el.getBoundingClientRect();
+
+                requestAnimationFrame(() => {
+
+                    el.style.transition =
+                        "transform .32s cubic-bezier(.2,.8,.3,1)";
+
+                    el.style.transform = "";
+
+                });
+
+            });
+
+    });
+
+}
+
+
 /* ============================================================
    RENDER
 ============================================================ */
@@ -7774,6 +8224,117 @@ document
 const SEARCH_SHINE_DURATION_MS = 5000;
 let searchShineStartTime = null;
 
+// The clear ("x") button shouldn't pop in on every keystroke — it only
+// reveals itself once the search text has sat unchanged for a few
+// seconds, so a fast typist never sees it flicker in and out. It sits
+// right after the typed text (not pinned to the end of the bar) — the
+// always-visible trash icon at the far end covers the "clear right now"
+// case, so the two controls end up serving two different moments.
+const SEARCH_CLEAR_REVEAL_DELAY_MS = 3000;
+let searchClearRevealTimeout = null;
+let searchClearMeasureCtx = null;
+
+// Measures how wide the current search text renders, in the exact font
+// the input uses, so the "x" can be positioned just past the last
+// character instead of guessing a fixed offset.
+function measureSearchTextWidth(text) {
+
+    if (!searchClearMeasureCtx) {
+
+        searchClearMeasureCtx =
+            document
+                .createElement("canvas")
+                .getContext("2d");
+
+    }
+
+    const inputStyle =
+        getComputedStyle(
+            document.getElementById("searchInput")
+        );
+
+    searchClearMeasureCtx.font =
+        `${inputStyle.fontWeight} ${inputStyle.fontSize} ${inputStyle.fontFamily}`;
+
+    return searchClearMeasureCtx.measureText(text).width;
+
+}
+
+// The input's own left text-padding (where the first character starts),
+// the gap left between the text and the button, the button's own
+// width, and the width reserved at the right for the trash icon — used
+// to place the "x" just past the text without letting it run into the
+// trash button when the search text is long.
+const SEARCH_TEXT_START_PX = 38;
+const SEARCH_CLEAR_BTN_GAP_PX = 6;
+const SEARCH_CLEAR_BTN_WIDTH_PX = 20;
+const SEARCH_TRASH_ZONE_WIDTH_PX = 44;
+
+function positionSearchClearBtn() {
+
+    const input =
+        document.getElementById("searchInput");
+
+    const clearBtn =
+        document.getElementById("searchClearBtn");
+
+    const idealLeft =
+        SEARCH_TEXT_START_PX +
+        measureSearchTextWidth(input.value) +
+        SEARCH_CLEAR_BTN_GAP_PX;
+
+    const maxLeft =
+        input.clientWidth -
+        SEARCH_TRASH_ZONE_WIDTH_PX -
+        SEARCH_CLEAR_BTN_WIDTH_PX;
+
+    clearBtn.style.left =
+        Math.min(idealLeft, maxLeft) + "px";
+
+}
+
+function scheduleSearchClearReveal() {
+
+    clearTimeout(searchClearRevealTimeout);
+
+    const clearBtn =
+        document.getElementById("searchClearBtn");
+
+    clearBtn.classList.remove("visible");
+
+    if (state.search.length === 0) {
+        return;
+    }
+
+    searchClearRevealTimeout =
+        setTimeout(
+            () => {
+
+                if (state.search.length > 0) {
+                    positionSearchClearBtn();
+                    clearBtn.classList.add("visible");
+                }
+
+            },
+            SEARCH_CLEAR_REVEAL_DELAY_MS
+        );
+
+}
+
+// Repositioning only matters while the button is showing — it never
+// changes while the user is actively typing, since typing hides it
+// again immediately (see scheduleSearchClearReveal above).
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (document.getElementById("searchClearBtn").classList.contains("visible")) {
+            positionSearchClearBtn();
+        }
+
+    }
+);
+
 document
     .getElementById("searchInput")
     .addEventListener(
@@ -7800,11 +8361,54 @@ document
                 isSearching
             );
 
+            scheduleSearchClearReveal();
 
             populateFilterUI();
             render();
 
         }
+    );
+
+// Shared by both the delayed "x" (next to the text) and the always-
+// visible trash icon (fixed at the end of the bar) — same action, two
+// different moments to reach for it.
+function clearSearch() {
+
+    clearTimeout(searchClearRevealTimeout);
+
+    const input =
+        document.getElementById("searchInput");
+
+    input.value = "";
+    state.search = "";
+
+    searchShineStartTime = null;
+
+    input.classList.remove("has-query");
+
+    document
+        .getElementById("searchClearBtn")
+        .classList.remove("visible");
+
+    populateFilterUI();
+    render();
+
+    input.focus();
+
+}
+
+document
+    .getElementById("searchClearBtn")
+    .addEventListener(
+        "click",
+        clearSearch
+    );
+
+document
+    .getElementById("searchTrashBtn")
+    .addEventListener(
+        "click",
+        clearSearch
     );
 
 
@@ -7824,6 +8428,57 @@ function closeAllDropdowns() {
                     "open"
                 )
         );
+
+    // The eye-button "show everything" toggles are conceptually part
+    // of these same menus, but lived in separate state (showAll
+    // OptionLists / addTagsShowAll / etc.) that this function never
+    // touched — so closing the menu left the button stuck looking
+    // active, and, for a picker that isn't hidden along with its
+    // menu (the Move-card category picker lives in a modal, not a
+    // .dropdown), left every option visibly still shown too.
+    if (showAllOptionLists.size) {
+
+        const activeElementIds =
+            [...showAllOptionLists];
+
+        showAllOptionLists.clear();
+
+        activeElementIds.forEach(
+            elementId =>
+                applyOptionSearch(elementId)
+        );
+
+    }
+
+    if (addTagsShowAll) {
+
+        addTagsShowAll = false;
+
+        document
+            .getElementById("addTagsEyeButton")
+            .classList.remove("active");
+
+    }
+
+    if (editTagsShowAll) {
+
+        editTagsShowAll = false;
+
+        document
+            .getElementById("editTagsEyeButton")
+            .classList.remove("active");
+
+    }
+
+    if (duplicateTagsShowAll) {
+
+        duplicateTagsShowAll = false;
+
+        document
+            .getElementById("duplicateTagsEyeButton")
+            .classList.remove("active");
+
+    }
 
 }
 
@@ -9287,29 +9942,6 @@ document
     );
 
 
-document.getElementById(
-    "loopSearchAnimationToggle"
-).checked = loopSearchAnimation;
-
-document
-    .getElementById("loopSearchAnimationToggle")
-    .addEventListener(
-        "change",
-        event => {
-
-            loopSearchAnimation = event.target.checked;
-
-            saveLoopSearchAnimation(
-                loopSearchAnimation
-            );
-
-            // Re-render so a category currently mid-search picks up
-            // the new looping/one-shot behavior right away.
-            render();
-
-        }
-    );
-
 
 let backupFilePickerSafetyTimer = null;
 let activeImportLoadingElements = [];
@@ -9549,7 +10181,15 @@ document
 
             button.addEventListener(
                 "click",
-                () => {
+                event => {
+
+                    // Not every .search-eye-btn sits inside a
+                    // .dropdown (the Move-card category picker's
+                    // lives in a modal instead), so without this the
+                    // click would bubble to the document-level
+                    // listener and closeAllDropdowns() would reset
+                    // the toggle it just turned on, in the same tick.
+                    event.stopPropagation();
 
                     toggleShowAllOptions(
                         button.dataset.searchTarget
@@ -9872,6 +10512,35 @@ document
     .addEventListener(
         "click",
         toggleEditTagsShowAll
+    );
+
+
+function closeEditTagsBox() {
+
+    document
+        .getElementById("editTagsBox")
+        .style.display = "none";
+
+    document
+        .getElementById("editTagsInput")
+        .value = "";
+
+    document
+        .getElementById("editTagsSuggestions")
+        .classList.remove("open");
+
+    document
+        .getElementById("editTagsSuggestions")
+        .innerHTML = "";
+
+}
+
+
+document
+    .getElementById("editTagsCloseButton")
+    .addEventListener(
+        "click",
+        closeEditTagsBox
     );
 
 
@@ -10238,62 +10907,147 @@ document
     );
 
 
+// Writes the edit form's current field values onto the resource being
+// edited (name/URL/description/tags — category moves separately,
+// through openMoveCardPicker) and reports which fields actually
+// changed. Shared by the normal Save button and by "Save changes and
+// move" (the edit-while-moving prompt below), so both end up writing
+// the form the same way.
+function applyEditFormToResource() {
+
+    const resource =
+        resources.find(
+            item =>
+                item.id ===
+                editingResourceId
+        );
+
+
+    if (!resource) {
+        return null;
+    }
+
+
+    // Snapshot the old values first — after saving, comparing against
+    // these is how we know exactly which field(s) changed, so only
+    // THOSE glow instead of always just the name.
+    const oldName = resource.name;
+    const oldUrl = resource.url;
+    const oldDescription = resource.description || "";
+    const oldTags = (resource.tags || []).slice();
+
+
+    resource.name =
+        document.getElementById(
+            "editName"
+        ).value.trim();
+
+
+    resource.url =
+        document.getElementById(
+            "editUrl"
+        ).value.trim();
+
+
+    resource.description =
+        document.getElementById(
+            "editDescription"
+        ).value.trim();
+
+
+    // A tag typed but never committed with Enter/comma is still just
+    // sitting in the box when Save is clicked — sweep it in rather than
+    // silently dropping it.
+    const leftoverTag =
+        document.getElementById(
+            "editTagsInput"
+        ).value.trim();
+
+    if (leftoverTag) {
+        addEditTagToSelection(leftoverTag);
+    }
+
+
+    resource.tags =
+        [...editTagsSelected];
+
+    registerTags(resource.tags);
+
+
+    resource.editedAt =
+        new Date().toISOString();
+
+
+    const nameChanged = resource.name !== oldName;
+    const urlChanged = resource.url !== oldUrl;
+    const descriptionChanged =
+        resource.description !== oldDescription;
+    const newlyAddedTags =
+        resource.tags.filter(
+            tag => !oldTags.some(
+                oldTag =>
+                    oldTag.toLowerCase() ===
+                    tag.toLowerCase()
+            )
+        );
+
+
+    return {
+        resource,
+        nameChanged,
+        urlChanged,
+        descriptionChanged,
+        newlyAddedTags
+    };
+
+}
+
+
+function flashEditFieldChanges(editResult) {
+
+    if (!editResult) {
+        return;
+    }
+
+    const {
+        resource,
+        nameChanged,
+        urlChanged,
+        descriptionChanged,
+        newlyAddedTags
+    } = editResult;
+
+    if (nameChanged) {
+        flashCardNameGlow(resource.id);
+    }
+
+    if (descriptionChanged) {
+        flashDescriptionGlow(resource.id);
+    }
+
+    newlyAddedTags.forEach(tag => {
+        flashTagGlow(resource.id, tag);
+    });
+
+    if (urlChanged) {
+        flashLinkGlow(resource.id);
+    }
+
+}
+
+
 document
     .getElementById("saveEdit")
     .addEventListener(
         "click",
         () => {
 
-            const resource =
-                resources.find(
-                    item =>
-                        item.id ===
-                        editingResourceId
-                );
+            const editResult =
+                applyEditFormToResource();
 
-
-            if (!resource) {
+            if (!editResult) {
                 return;
             }
-
-
-            // Snapshot the old values first — after saving, comparing
-            // against these is how we know exactly which field(s)
-            // changed, so only THOSE glow instead of always just the
-            // name.
-            const oldName = resource.name;
-            const oldUrl = resource.url;
-            const oldDescription = resource.description || "";
-            const oldTags = (resource.tags || []).slice();
-
-
-            resource.name =
-                document.getElementById(
-                    "editName"
-                ).value.trim();
-
-
-            resource.url =
-                document.getElementById(
-                    "editUrl"
-                ).value.trim();
-
-
-            resource.description =
-                document.getElementById(
-                    "editDescription"
-                ).value.trim();
-
-
-            resource.tags =
-                [...editTagsSelected];
-
-            registerTags(resource.tags);
-
-
-            resource.editedAt =
-                new Date().toISOString();
-
 
             document.getElementById(
                 "editModal"
@@ -10301,38 +11055,9 @@ document
                 "open"
             );
 
-
-            const nameChanged = resource.name !== oldName;
-            const urlChanged = resource.url !== oldUrl;
-            const descriptionChanged =
-                resource.description !== oldDescription;
-            const newlyAddedTags =
-                resource.tags.filter(
-                    tag => !oldTags.some(
-                        oldTag =>
-                            oldTag.toLowerCase() ===
-                            tag.toLowerCase()
-                    )
-                );
-
-
             render();
 
-            if (nameChanged) {
-                flashCardNameGlow(resource.id);
-            }
-
-            if (descriptionChanged) {
-                flashDescriptionGlow(resource.id);
-            }
-
-            newlyAddedTags.forEach(tag => {
-                flashTagGlow(resource.id, tag);
-            });
-
-            if (urlChanged) {
-                flashLinkGlow(resource.id);
-            }
+            flashEditFieldChanges(editResult);
 
         }
     );
@@ -11328,6 +12053,13 @@ document
 ============================================================ */
 
 let pendingConfirmAction = null;
+// Almost every confirm-modal use treats its Cancel button as a plain
+// "never mind, close this" — so this stays null and the Cancel click
+// handler below is a no-op past closing the modal. The "move while
+// editing" prompt is the one case where BOTH buttons are actions
+// (save-then-move vs. move-without-saving), so it's the only caller
+// that sets this via options.onCancel.
+let pendingConfirmCancelAction = null;
 let pendingCategoryPick = null;
 let pendingCategoryPickAllowCreate = false;
 
@@ -11379,14 +12111,33 @@ function openConfirmModal(
         );
 
     document
+        .getElementById("confirmModalCancel")
+        .classList.toggle(
+            "danger",
+            options.cancelVariant === "danger"
+        );
+
+    document
         .querySelector("#confirmModal .modal-actions")
         .classList.toggle(
             "modal-actions-reversed",
             !!options.reverseButtons
         );
 
+    // Pushes the two buttons to opposite ends of the modal instead of
+    // clustering them together on the right — for a prompt like "move
+    // while editing" or "finish this tag", where the two choices are
+    // genuinely opposite actions, not a usual confirm/cancel pair.
+    document
+        .querySelector("#confirmModal .modal-actions")
+        .classList.toggle(
+            "modal-actions-split",
+            !!options.spreadButtons
+        );
+
 
     pendingConfirmAction = onConfirm;
+    pendingConfirmCancelAction = options.onCancel || null;
 
 
     document
@@ -11451,11 +12202,21 @@ function getDuplicateResourceFormValues() {
 }
 
 
+// A tag typed but never committed (no Enter/comma yet) doesn't show up
+// in getXFormValues() at all — it's still just sitting in the input,
+// not yet part of the selected-tags list — so each dirty-check also
+// looks at that raw input directly. This is what lets a single "You
+// have made some changes" prompt catch it, instead of it silently
+// vanishing (nothing else changed) or needing a second, separate prompt
+// (something else changed too).
 function isAddResourceFormDirty() {
 
     return (
         addResourceFormSnapshot !== null &&
-        getAddResourceFormValues() !== addResourceFormSnapshot
+        (
+            getAddResourceFormValues() !== addResourceFormSnapshot ||
+            document.getElementById("addTagsInput").value.trim().length > 0
+        )
     );
 
 }
@@ -11465,7 +12226,10 @@ function isEditFormDirty() {
 
     return (
         editFormSnapshot !== null &&
-        getEditFormValues() !== editFormSnapshot
+        (
+            getEditFormValues() !== editFormSnapshot ||
+            document.getElementById("editTagsInput").value.trim().length > 0
+        )
     );
 
 }
@@ -11475,7 +12239,10 @@ function isDuplicateResourceFormDirty() {
 
     return (
         duplicateFormSnapshot !== null &&
-        getDuplicateResourceFormValues() !== duplicateFormSnapshot
+        (
+            getDuplicateResourceFormValues() !== duplicateFormSnapshot ||
+            document.getElementById("duplicateTagsInput").value.trim().length > 0
+        )
     );
 
 }
@@ -11536,7 +12303,9 @@ function confirmDiscardIfDirty(isDirtyFn, onDiscard) {
         onDiscard,
         {
             cancelLabel: "Continue editing",
-            reverseButtons: true
+            cancelVariant: "primary",
+            reverseButtons: true,
+            spreadButtons: true
         }
     );
 
@@ -11667,6 +12436,7 @@ document
                 pendingConfirmAction;
 
             pendingConfirmAction = null;
+            pendingConfirmCancelAction = null;
 
 
             document
@@ -11676,6 +12446,31 @@ document
 
             if (action) {
                 action();
+            }
+
+        }
+    );
+
+
+// For nearly every confirm modal, this button is a plain "never mind"
+// and pendingConfirmCancelAction is null, so this is a no-op past
+// clearing it. The "move while editing" prompt is the one place both
+// buttons carry out an action — this is what runs "move without
+// saving" when that button is the one clicked.
+document
+    .getElementById("confirmModalCancel")
+    .addEventListener(
+        "click",
+        () => {
+
+            const cancelAction =
+                pendingConfirmCancelAction;
+
+            pendingConfirmAction = null;
+            pendingConfirmCancelAction = null;
+
+            if (cancelAction) {
+                cancelAction();
             }
 
         }
@@ -12305,8 +13100,11 @@ function deleteCardFlow(resourceId) {
 
 function openMoveCardPicker(resource) {
 
+    // Site order, not alphabetical — the picker's "show all" list
+    // should read the same top-to-bottom as the categories on the
+    // page itself.
     const destinations =
-        getCategories();
+        getFullCategoryOrder();
 
 
     openCategoryPicker(
@@ -12328,44 +13126,86 @@ function openMoveCardPicker(resource) {
             const isNewCategory =
                 !existingMatch;
 
-            if (isNewCategory) {
+            const performMove = () => {
 
-                state.categoryOrder.unshift(
-                    finalDestination
+                if (isNewCategory) {
+
+                    state.categoryOrder.unshift(
+                        finalDestination
+                    );
+
+                    saveCategoryOrder(
+                        state.categoryOrder
+                    );
+
+                }
+
+
+                resource.category =
+                    finalDestination;
+
+
+                if (
+                    !state.expandedCategories.includes(
+                        finalDestination
+                    )
+                ) {
+
+                    state.expandedCategories.push(
+                        finalDestination
+                    );
+
+                }
+
+
+                document
+                    .getElementById("editModal")
+                    .classList.remove("open");
+
+
+                render();
+
+                flashCardGlow(resource.id);
+
+            };
+
+
+            // The edit modal is still open underneath the category
+            // picker — if the name, tags, etc. were changed before
+            // hitting Move, moving the card shouldn't silently throw
+            // those edits away. Ask which they want instead of
+            // guessing either way.
+            if (isEditFormDirty()) {
+
+                openConfirmModal(
+                    "You have made some changes",
+                    "Save your changes before moving this card, or move it without saving them?",
+                    "Save changes and move",
+                    () => {
+
+                        const editResult =
+                            applyEditFormToResource();
+
+                        performMove();
+
+                        flashEditFieldChanges(editResult);
+
+                    },
+                    {
+                        cancelLabel: "Don't save changes and move",
+                        cancelVariant: "danger",
+                        variant: "primary",
+                        spreadButtons: true,
+                        onCancel: performMove
+                    }
                 );
 
-                saveCategoryOrder(
-                    state.categoryOrder
-                );
+                return;
 
             }
 
 
-            resource.category =
-                finalDestination;
-
-
-            if (
-                !state.expandedCategories.includes(
-                    finalDestination
-                )
-            ) {
-
-                state.expandedCategories.push(
-                    finalDestination
-                );
-
-            }
-
-
-            document
-                .getElementById("editModal")
-                .classList.remove("open");
-
-
-            render();
-
-            flashCardGlow(resource.id);
+            performMove();
 
         },
         {
@@ -13309,6 +14149,35 @@ document
     );
 
 
+function closeDuplicateTagsBox() {
+
+    document
+        .getElementById("duplicateTagsBox")
+        .style.display = "none";
+
+    document
+        .getElementById("duplicateTagsInput")
+        .value = "";
+
+    document
+        .getElementById("duplicateTagsSuggestions")
+        .classList.remove("open");
+
+    document
+        .getElementById("duplicateTagsSuggestions")
+        .innerHTML = "";
+
+}
+
+
+document
+    .getElementById("duplicateTagsCloseButton")
+    .addEventListener(
+        "click",
+        closeDuplicateTagsBox
+    );
+
+
 function addDuplicateTagToSelection(rawTag) {
 
     const trimmed = stripTagSpaces(rawTag);
@@ -13677,6 +14546,11 @@ function proceedDuplicateResourceCancel() {
 
     closeDuplicateResourceModal();
 
+    // Only actually reloads if nothing else is still open (the "edit
+    // this card instead?" prompt below may be about to take over) and
+    // there's genuinely newer data sitting in another tab.
+    reloadIfChestUpdatedElsewhere();
+
 
     const original =
         resources.find(item => item.id === originalId);
@@ -13795,6 +14669,19 @@ document
                     .getElementById("duplicateDescription")
                     .value
                     .trim();
+
+            // A tag typed but never committed with Enter/comma is still
+            // just sitting in the box when Create is clicked — sweep it
+            // in rather than silently dropping it.
+            const leftoverDuplicateTag =
+                document
+                    .getElementById("duplicateTagsInput")
+                    .value
+                    .trim();
+
+            if (leftoverDuplicateTag) {
+                addDuplicateTagToSelection(leftoverDuplicateTag);
+            }
 
             const newTags =
                 [...duplicateTagsSelected];
@@ -13938,7 +14825,7 @@ document
                 .classList.remove("open");
 
 
-            render();
+            animateCategoryReorder();
 
             flashCategoryGlow(
                 category,
@@ -13974,7 +14861,7 @@ document
                 .classList.remove("open");
 
 
-            render();
+            animateCategoryReorder();
 
             flashCategoryGlow(
                 category,
@@ -14020,7 +14907,7 @@ document
                         picked
                     );
 
-                    render();
+                    animateCategoryReorder();
 
                     flashCategoryGlow(
                         category,
@@ -14132,7 +15019,7 @@ document
                 .classList.remove("open");
 
 
-            render();
+            animateCategoryReorder();
 
             flashCategoryGlow(
                 category,
@@ -14178,7 +15065,7 @@ document
                 .classList.remove("open");
 
 
-            render();
+            animateCategoryReorder();
 
             flashCategoryGlow(
                 category,
@@ -14190,6 +15077,384 @@ document
                 "category-glow-soft-yellow",
                 { scroll: false }
             );
+
+        }
+    );
+
+
+/* ============================================================
+   DRAG-TO-REORDER (single category, or — from the category Sort
+   menu's "Drag to…" — every category at once)
+   Lists every category top-to-bottom in site order. Either just the
+   one category being edited, or all of them, carry draggable="true"
+   — dragging live-reorders the DOM (insertBefore/after), animated
+   with a small FLIP transform on every row it displaces so rows
+   slide out of the way instead of snapping. Save changes just reads
+   that DOM order back out; nothing touches state.categoryOrder until
+   then.
+============================================================ */
+let categoryDragCategory = null;
+let categoryDragAllMode = false;
+
+
+// FLIP: capture every row's position, let `mutate` change the DOM,
+// then for each row that actually moved, jump it back to where it
+// used to be with a transform (no transition) and immediately
+// transition that transform away to zero on the next frame. The
+// browser only ever animates the difference, so it reads as a slide.
+function flipReorderRows(listEl, mutate) {
+
+    const rows =
+        [...listEl.querySelectorAll(
+            ".category-drag-row"
+        )];
+
+    const firstRects = new Map();
+
+    rows.forEach(
+        row =>
+            firstRects.set(
+                row,
+                row.getBoundingClientRect()
+            )
+    );
+
+
+    mutate();
+
+
+    rows.forEach(row => {
+
+        const first =
+            firstRects.get(row);
+
+        if (!first) {
+            return;
+        }
+
+        const last =
+            row.getBoundingClientRect();
+
+        const deltaY =
+            first.top - last.top;
+
+        if (!deltaY) {
+            return;
+        }
+
+        row.style.transition = "none";
+        row.style.transform = `translateY(${deltaY}px)`;
+
+        // Force layout so the browser commits the jump above before
+        // the transition is switched back on below — otherwise it'd
+        // just animate from 0 and skip the jump entirely.
+        row.getBoundingClientRect();
+
+        requestAnimationFrame(() => {
+
+            row.style.transition = "";
+            row.style.transform = "";
+
+        });
+
+    });
+
+}
+
+
+function renderCategoryDragList(draggableCategory) {
+
+    const order =
+        getFullCategoryOrder();
+
+    const listEl =
+        document.getElementById(
+            "categoryDragList"
+        );
+
+    listEl.innerHTML =
+        order
+            .map(
+                cat => {
+
+                    const isDraggable =
+                        draggableCategory === null ||
+                        cat === draggableCategory;
+
+                    return `
+
+                        <div
+                            class="category-drag-row${isDraggable ? " draggable" : ""}"
+                            data-category="${escapeHTML(cat)}"
+                            ${isDraggable ? 'draggable="true"' : ""}>
+
+                            ${isDraggable ? `
+
+                                <svg
+                                    class="category-drag-handle"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor">
+
+                                    <circle cx="8" cy="6" r="1.6"></circle>
+                                    <circle cx="16" cy="6" r="1.6"></circle>
+                                    <circle cx="8" cy="12" r="1.6"></circle>
+                                    <circle cx="16" cy="12" r="1.6"></circle>
+                                    <circle cx="8" cy="18" r="1.6"></circle>
+                                    <circle cx="16" cy="18" r="1.6"></circle>
+
+                                </svg>
+
+                            ` : ""}
+
+                            <span class="category-drag-name">
+                                ${escapeHTML(cat)}
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+function openCategoryDragModal(draggableCategory) {
+
+    categoryDragAllMode = draggableCategory === null;
+    categoryDragCategory = draggableCategory;
+
+    document.getElementById(
+        "categoryDragModalTitle"
+    ).textContent =
+        categoryDragAllMode
+            ? "Drag categories to reorder"
+            : `Drag "${draggableCategory}" to reorder`;
+
+    renderCategoryDragList(draggableCategory);
+
+    document
+        .getElementById("categoryDragModal")
+        .classList.add("open");
+
+}
+
+
+document
+    .getElementById("editCategoryMoveDrag")
+    .addEventListener(
+        "click",
+        () => {
+
+            const category =
+                editingCategoryName;
+
+            if (!category) {
+                return;
+            }
+
+
+            document
+                .getElementById("editCategoryModal")
+                .classList.remove("open");
+
+            openCategoryDragModal(category);
+
+        }
+    );
+
+
+document
+    .getElementById("categoryDragList")
+    .addEventListener(
+        "dragstart",
+        event => {
+
+            const row =
+                event.target.closest(
+                    ".category-drag-row.draggable"
+                );
+
+            if (!row) {
+
+                event.preventDefault();
+
+                return;
+
+            }
+
+            row.classList.add("dragging");
+
+            event.dataTransfer.effectAllowed = "move";
+
+            // Firefox won't start a drag at all without data set on
+            // it — the value itself is never read back.
+            event.dataTransfer.setData(
+                "text/plain",
+                row.dataset.category
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("categoryDragList")
+    .addEventListener(
+        "dragover",
+        event => {
+
+            const draggingRow =
+                document.querySelector(
+                    "#categoryDragList .dragging"
+                );
+
+            if (!draggingRow) {
+                return;
+            }
+
+            event.preventDefault();
+
+
+            const overRow =
+                event.target.closest(
+                    ".category-drag-row"
+                );
+
+            if (!overRow || overRow === draggingRow) {
+                return;
+            }
+
+
+            const rect =
+                overRow.getBoundingClientRect();
+
+            const isAfter =
+                event.clientY - rect.top >
+                rect.height / 2;
+
+            // Skip the (fairly expensive, FLIP-measuring) reorder
+            // entirely when the pointer is still hovering a spot that
+            // wouldn't actually move anything — dragover fires on
+            // basically every pixel of mouse movement, not just on
+            // meaningful crossings.
+            const alreadyThere =
+                isAfter
+                    ? draggingRow.previousElementSibling === overRow
+                    : draggingRow.nextElementSibling === overRow;
+
+            if (alreadyThere) {
+                return;
+            }
+
+
+            flipReorderRows(
+                document.getElementById("categoryDragList"),
+                () => {
+
+                    if (isAfter) {
+                        overRow.after(draggingRow);
+                    } else {
+                        overRow.before(draggingRow);
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("categoryDragList")
+    .addEventListener(
+        "dragend",
+        () => {
+
+            const draggingRow =
+                document.querySelector(
+                    "#categoryDragList .dragging"
+                );
+
+            if (draggingRow) {
+                draggingRow.classList.remove("dragging");
+            }
+
+        }
+    );
+
+
+document
+    .getElementById("saveCategoryDragOrder")
+    .addEventListener(
+        "click",
+        () => {
+
+            const category =
+                categoryDragCategory;
+
+            const isAllMode =
+                categoryDragAllMode;
+
+            if (!isAllMode && !category) {
+                return;
+            }
+
+
+            const newOrder =
+                [...document.querySelectorAll(
+                    "#categoryDragList .category-drag-row"
+                )].map(
+                    row =>
+                        row.dataset.category
+                );
+
+            state.categoryOrder = newOrder;
+
+            saveCategoryOrder(newOrder);
+
+            categoryDragCategory = null;
+            categoryDragAllMode = false;
+
+
+            document
+                .getElementById("categoryDragModal")
+                .classList.remove("open");
+
+
+            animateCategoryReorder();
+
+            if (!isAllMode) {
+
+                flashCategoryGlow(
+                    category,
+                    "category-glow-yellow"
+                );
+
+            }
+
+        }
+    );
+
+
+/* ============================================================
+   CATEGORY REORDER (toolbar button)
+   Opens the same drag modal as a single category's "Drag to…", just
+   with every row draggable instead of one — a plain direct action,
+   no menu.
+============================================================ */
+
+document
+    .getElementById("categoryReorderButton")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeAllDropdowns();
+
+            openCategoryDragModal(null);
 
         }
     );
@@ -14263,12 +15528,21 @@ function closeModalGuarded(modalId) {
 
     if (modalId === "addResourceModal") {
 
+        // A tag typed but never committed (no Enter/comma yet) is
+        // caught by isAddResourceFormDirty's own check of the raw
+        // input value, so a single guard prompt covers it.
         confirmDiscardIfDirty(
             isAddResourceFormDirty,
             () => {
                 document
                     .getElementById("addResourceModal")
                     .classList.remove("open");
+
+                // Exiting the form is exactly the moment another
+                // tab's changes (made while this one was mid-edit
+                // and the cross-tab sync check below was
+                // deliberately holding off) can safely be picked up.
+                reloadIfChestUpdatedElsewhere();
             }
         );
 
@@ -14284,6 +15558,8 @@ function closeModalGuarded(modalId) {
                 document
                     .getElementById("editModal")
                     .classList.remove("open");
+
+                reloadIfChestUpdatedElsewhere();
             }
         );
 
@@ -14307,6 +15583,8 @@ function closeModalGuarded(modalId) {
                 document
                     .getElementById("editCategoryModal")
                     .classList.remove("open");
+
+                reloadIfChestUpdatedElsewhere();
             }
         );
 
@@ -14322,6 +15600,8 @@ function closeModalGuarded(modalId) {
                 document
                     .getElementById("tagDetailModal")
                     .classList.remove("open");
+
+                reloadIfChestUpdatedElsewhere();
             }
         );
 
@@ -14406,7 +15686,12 @@ document.addEventListener(
 
             confirmModalEl.classList.remove("open");
 
+            // Escape is always the neutral "never mind" here, even for
+            // the move-while-editing prompt where the Cancel button
+            // itself carries out "move without saving" — so this clears
+            // both pending actions rather than running either one.
             pendingConfirmAction = null;
+            pendingConfirmCancelAction = null;
 
             return;
 
