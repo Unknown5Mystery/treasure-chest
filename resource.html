@@ -1086,8 +1086,64 @@ h1 {
     box-shadow: var(--shadow);
 }
 
+/* Reuses .move-menu's shell but needs to fit longer rows — "Open in
+   existing window" entries carry a resource name — so it gets its own
+   width instead of the fixed 180px every other .move-menu uses. */
+#copyContextMenu {
+    width: max-content;
+    min-width: 190px;
+    max-width: 300px;
+}
+
 .move-menu.open {
     display: block;
+}
+
+/* ============================================================
+   PREVIEW DURATION STEP — shown inside the preview right-click
+   menu after picking "another tab" / "another window", in place
+   of the two action rows (see openPreviewDurationStep()).
+============================================================ */
+
+.preview-duration-step {
+    padding: 8px 9px 9px;
+}
+
+.preview-duration-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--soft);
+}
+
+.preview-duration-label span:last-child {
+    color: var(--brand-yellow);
+}
+
+.preview-duration-slider {
+    width: 100%;
+    margin-bottom: 9px;
+
+    accent-color: var(--brand-yellow);
+    cursor: pointer;
+}
+
+.preview-duration-confirm {
+    justify-content: center;
+
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+}
+
+.preview-duration-confirm:hover {
+    background: var(--brand-yellow);
+    color: var(--dark-text);
+    opacity: .9;
 }
 
 .move-row {
@@ -4039,20 +4095,8 @@ h1 {
                             stroke="currentColor"
                             stroke-width="1.8">
 
-                            <rect
-                                x="3"
-                                y="5"
-                                width="13"
-                                height="13"
-                                rx="2">
-                            </rect>
-
-                            <path d="M8 11.5h5"></path>
-                            <path d="M10.5 9v5"></path>
-
-                            <path
-                                d="M20 9v10a2 2 0 0 1-2 2H8">
-                            </path>
+                            <path d="M12 3 3 8l9 5 9-5-9-5Z"></path>
+                            <path d="m5 12 7 4 7-4"></path>
 
                         </svg>
 
@@ -5069,26 +5113,15 @@ h1 {
 
             <button
                 class="modal-button"
-                id="addResourceImportButton">
-                <span class="import-spinner" aria-hidden="true"></span>
-                <span id="addResourceImportLabel">Import</span>
+                data-close-modal="addResourceModal">
+                Cancel
             </button>
 
-            <div class="modal-actions-right">
-
-                <button
-                    class="modal-button"
-                    data-close-modal="addResourceModal">
-                    Cancel
-                </button>
-
-                <button
-                    class="modal-button primary"
-                    id="saveAddResource">
-                    Add resource
-                </button>
-
-            </div>
+            <button
+                class="modal-button primary"
+                id="saveAddResource">
+                Add resource
+            </button>
 
         </div>
 
@@ -5942,6 +5975,29 @@ h1 {
 
     </div>
 
+</div>
+
+
+<!-- ==========================================================
+     COPY BUTTON RIGHT-CLICK MENU
+     Positioned at the cursor on "contextmenu"; content is
+     rebuilt fresh each time it opens (see openCopyContextMenu()).
+========================================================== -->
+
+<div
+    class="move-menu"
+    id="copyContextMenu">
+</div>
+
+
+<!-- ==========================================================
+     PREVIEW BUTTON RIGHT-CLICK MENU
+     Same shell and pattern as the copy menu above.
+========================================================== -->
+
+<div
+    class="move-menu"
+    id="previewContextMenu">
 </div>
 
 
@@ -7048,20 +7104,8 @@ function createCard(resource) {
                             stroke="currentColor"
                             stroke-width="1.8">
 
-                            <rect
-                                x="3"
-                                y="5"
-                                width="13"
-                                height="13"
-                                rx="2">
-                            </rect>
-
-                            <path d="M8 11.5h5"></path>
-                            <path d="M10.5 9v5"></path>
-
-                            <path
-                                d="M20 9v10a2 2 0 0 1-2 2H8">
-                            </path>
+                            <path d="M12 3 3 8l9 5 9-5-9-5Z"></path>
+                            <path d="m5 12 7 4 7-4"></path>
 
                         </svg>
 
@@ -7139,6 +7183,7 @@ function createCard(resource) {
                     <button
                         class="preview-btn"
                         data-action="noop"
+                        data-id="${resource.id}"
                         data-url="${escapeHTML(resource.url)}"
                         title="${escapeHTML(resource.url)}">
 
@@ -9955,10 +10000,6 @@ function startImportLoading(...elements) {
         el => el.classList.add("loading")
     );
 
-    if (elements.includes(document.getElementById("addResourceImportButton"))) {
-        document.getElementById("addResourceImportLabel").textContent = "Importing";
-    }
-
     if (elements.includes(document.getElementById("importBackupOption"))) {
         document.getElementById("importBackupOptionLabel").textContent = "Importing";
     }
@@ -9988,7 +10029,6 @@ function stopImportLoading() {
 
     activeImportLoadingElements = [];
 
-    document.getElementById("addResourceImportLabel").textContent = "Import";
     document.getElementById("importBackupOptionLabel").textContent = "Import a backup";
 
     clearTimeout(
@@ -10025,36 +10065,10 @@ document
 
 
 document
-    .getElementById("addResourceImportButton")
-    .addEventListener(
-        "click",
-        () => {
-
-            // Keep the Add resource modal open behind the file picker
-            // so its Import button can actually show the loading cue —
-            // it only closes once a file has been chosen, further down.
-            startImportLoading(
-                document.getElementById("addResourceImportButton")
-            );
-
-            document
-                .getElementById("backupFileInput")
-                .click();
-
-        }
-    );
-
-
-document
     .getElementById("backupFileInput")
     .addEventListener(
         "change",
         event => {
-
-            const wasAddResourceImport =
-                activeImportLoadingElements.includes(
-                    document.getElementById("addResourceImportButton")
-                );
 
             const wasSettingsImport =
                 activeImportLoadingElements.includes(
@@ -10067,12 +10081,6 @@ document
                 event.target.files[0];
 
             if (file) {
-
-                if (wasAddResourceImport) {
-                    document
-                        .getElementById("addResourceModal")
-                        .classList.remove("open");
-                }
 
                 if (wasSettingsImport) {
                     closeAllDropdowns();
@@ -10362,6 +10370,564 @@ async function copyResource(
     }
 
 }
+
+
+// A "use" for sort purposes: pushed for the Copy button already, and
+// for every way the right-click menu below can open a resource's link
+// — clicking through to a link is clicking through to a link, whichever
+// route got you there.
+function trackResourceUse(resource) {
+
+    resource.uses.push(
+        new Date().toISOString()
+    );
+
+    saveDashboardData();
+
+}
+
+
+/* ============================================================
+   COPY BUTTON RIGHT-CLICK MENU
+
+   A page can't see the browser's other open windows — only ones it
+   opened itself and kept a handle to. So "Open in existing window"
+   can only offer windows THIS menu has opened via "Open in new
+   window" earlier in the session, and only while they're still open
+   (contextMenuWindows is filtered live, right before the menu is
+   built, to drop any the person has since closed).
+============================================================ */
+
+let contextMenuWindows = [];
+let contextMenuResource = null;
+
+
+function openCopyContextMenu(event, resource) {
+
+    event.preventDefault();
+
+    closeAllDropdowns();
+
+    contextMenuResource = resource;
+
+    contextMenuWindows =
+        contextMenuWindows.filter(
+            entry =>
+                entry.ref &&
+                !entry.ref.closed
+        );
+
+
+    const menu =
+        document.getElementById("copyContextMenu");
+
+
+    let rowsHTML = `
+        <button
+            type="button"
+            class="move-row"
+            data-context-action="new-tab">
+            Open in new tab
+        </button>
+
+        <button
+            type="button"
+            class="move-row"
+            data-context-action="this-tab">
+            Open in this tab
+        </button>
+
+        <button
+            type="button"
+            class="move-row"
+            data-context-action="new-window">
+            Open in new window
+        </button>
+    `;
+
+
+    // "if [there are] no [or not] more than 1 window[s], this choice
+    // doesn't show up" — so the whole section is hidden unless there
+    // are at least two open windows to actually choose between.
+    if (contextMenuWindows.length > 1) {
+
+        rowsHTML +=
+            `<div class="move-menu-divider"></div>`;
+
+        rowsHTML +=
+            contextMenuWindows
+                .map(
+                    (entry, index) => `
+                        <button
+                            type="button"
+                            class="move-row"
+                            data-context-action="existing-window"
+                            data-window-index="${index}">
+                            Open in existing window — ${escapeHTML(entry.label)}
+                        </button>
+                    `
+                )
+                .join("");
+
+    }
+
+
+    menu.innerHTML = rowsHTML;
+
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    menu.classList.add("open");
+
+
+    // The menu has no real size until it's in the DOM with content, so
+    // clamping to the viewport has to wait a frame — otherwise a
+    // right-click near the right or bottom edge would hang the menu
+    // off the screen.
+    requestAnimationFrame(
+        () => {
+
+            const rect =
+                menu.getBoundingClientRect();
+
+            let left = event.clientX;
+            let top = event.clientY;
+
+            if (left + rect.width > window.innerWidth - 8) {
+                left = Math.max(8, window.innerWidth - rect.width - 8);
+            }
+
+            if (top + rect.height > window.innerHeight - 8) {
+                top = Math.max(8, window.innerHeight - rect.height - 8);
+            }
+
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+
+        }
+    );
+
+}
+
+
+document
+    .getElementById("resourceArea")
+    .addEventListener(
+        "contextmenu",
+        event => {
+
+            const copyButton =
+                event.target.closest(
+                    '.copy-btn[data-action="copy"]'
+                );
+
+            if (!copyButton) {
+                return;
+            }
+
+            const resource =
+                resources.find(
+                    item =>
+                        item.id ===
+                        Number(
+                            copyButton.dataset.id
+                        )
+                );
+
+            if (!resource) {
+                return;
+            }
+
+            openCopyContextMenu(
+                event,
+                resource
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("copyContextMenu")
+    .addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            const row =
+                event.target.closest(
+                    "[data-context-action]"
+                );
+
+            if (!row || !contextMenuResource) {
+                return;
+            }
+
+            const action =
+                row.dataset.contextAction;
+
+            const resource =
+                contextMenuResource;
+
+
+            if (action === "new-tab") {
+
+                window.open(
+                    resource.url,
+                    "_blank",
+                    "noopener,noreferrer"
+                );
+
+                trackResourceUse(resource);
+
+            } else if (action === "this-tab") {
+
+                trackResourceUse(resource);
+
+                window.location.href =
+                    resource.url;
+
+            } else if (action === "new-window") {
+
+                // Deliberately no "noopener" here — keeping the handle
+                // (win) is what lets "Open in existing window" reuse
+                // this window later, and that only works if we're
+                // allowed to hold onto it.
+                const win =
+                    window.open(
+                        resource.url,
+                        "_blank",
+                        "width=1180,height=780,left=80,top=80"
+                    );
+
+                if (win) {
+
+                    contextMenuWindows.push({
+                        ref: win,
+                        label: resource.name
+                    });
+
+                }
+
+                trackResourceUse(resource);
+
+            } else if (action === "existing-window") {
+
+                const index =
+                    Number(row.dataset.windowIndex);
+
+                const entry =
+                    contextMenuWindows[index];
+
+                if (
+                    entry &&
+                    entry.ref &&
+                    !entry.ref.closed
+                ) {
+
+                    entry.ref.location.href =
+                        resource.url;
+
+                    entry.ref.focus();
+
+                    entry.label =
+                        resource.name;
+
+                }
+
+                trackResourceUse(resource);
+
+            }
+
+
+            contextMenuResource = null;
+
+            closeAllDropdowns();
+
+        }
+    );
+
+
+/* ============================================================
+   TIMED PREVIEW WINDOW/TAB ("Preview on another tab/window")
+
+   A real browser tab or window (not an iframe), so sites that
+   refuse to be framed still show up normally. Deliberately no
+   "noopener": the handle is what lets this close the tab/window
+   again once the chosen duration runs out.
+============================================================ */
+
+function openTimedPreviewWindow(resource, windowFeatures, durationSeconds) {
+
+    const win =
+        window.open(
+            resource.url,
+            "_blank",
+            windowFeatures || ""
+        );
+
+    if (!win) {
+        return;
+    }
+
+    setTimeout(
+        () => {
+
+            if (!win.closed) {
+
+                win.close();
+
+            }
+
+        },
+        durationSeconds * 1000
+    );
+
+}
+
+
+/* ============================================================
+   PREVIEW BUTTON RIGHT-CLICK MENU
+
+   Two rows — "another tab" / "another window" — and no left-click
+   action at all (left-click on Preview does nothing). Picking a row
+   doesn't open anything right away: it swaps the menu to a duration
+   step (5–60s, in steps of 5, defaulting to 5) so the person sets
+   how long that one preview should stay open before it fires.
+============================================================ */
+
+let previewContextResource = null;
+let previewPendingAction = null;
+let previewPendingWindowFeatures = null;
+
+const PREVIEW_DEFAULT_DURATION = 5;
+
+
+function renderPreviewContextMenuActions(menu) {
+
+    menu.innerHTML = `
+        <button
+            type="button"
+            class="move-row"
+            data-preview-action="another-tab">
+            Preview on another tab
+        </button>
+
+        <button
+            type="button"
+            class="move-row"
+            data-preview-action="another-window">
+            Preview on another window
+        </button>
+    `;
+
+}
+
+
+function renderPreviewDurationStep(menu) {
+
+    menu.innerHTML = `
+        <div class="preview-duration-step">
+
+            <div class="preview-duration-label">
+                <span>Preview duration</span>
+                <span id="previewDurationStepValue">${PREVIEW_DEFAULT_DURATION}s</span>
+            </div>
+
+            <input
+                type="range"
+                id="previewDurationStepSlider"
+                class="preview-duration-slider"
+                min="5"
+                max="60"
+                step="5"
+                value="${PREVIEW_DEFAULT_DURATION}">
+
+            <button
+                type="button"
+                class="move-row preview-duration-confirm"
+                id="previewDurationStepConfirm">
+                Start preview
+            </button>
+
+        </div>
+    `;
+
+    const sliderEl =
+        document.getElementById("previewDurationStepSlider");
+
+    const valueEl =
+        document.getElementById("previewDurationStepValue");
+
+    sliderEl.addEventListener(
+        "input",
+        () => {
+
+            valueEl.textContent =
+                `${sliderEl.value}s`;
+
+        }
+    );
+
+    // Dragging the slider (or clicking the confirm button) fires
+    // "click" too — without this, it would bubble up to the document
+    // click listener and close the menu out from under the drag.
+    sliderEl.addEventListener(
+        "click",
+        event => event.stopPropagation()
+    );
+
+}
+
+
+function openPreviewContextMenu(event, resource) {
+
+    event.preventDefault();
+
+    closeAllDropdowns();
+
+    previewContextResource = resource;
+    previewPendingAction = null;
+    previewPendingWindowFeatures = null;
+
+
+    const menu =
+        document.getElementById("previewContextMenu");
+
+    renderPreviewContextMenuActions(menu);
+
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+
+    menu.classList.add("open");
+
+
+    requestAnimationFrame(
+        () => {
+
+            const rect =
+                menu.getBoundingClientRect();
+
+            let left = event.clientX;
+            let top = event.clientY;
+
+            if (left + rect.width > window.innerWidth - 8) {
+                left = Math.max(8, window.innerWidth - rect.width - 8);
+            }
+
+            if (top + rect.height > window.innerHeight - 8) {
+                top = Math.max(8, window.innerHeight - rect.height - 8);
+            }
+
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+
+        }
+    );
+
+}
+
+
+document
+    .getElementById("resourceArea")
+    .addEventListener(
+        "contextmenu",
+        event => {
+
+            const previewButton =
+                event.target.closest(".preview-btn");
+
+            if (!previewButton) {
+                return;
+            }
+
+            const resource =
+                resources.find(
+                    item =>
+                        item.id ===
+                        Number(
+                            previewButton.dataset.id
+                        )
+                );
+
+            if (!resource) {
+                return;
+            }
+
+            openPreviewContextMenu(
+                event,
+                resource
+            );
+
+        }
+    );
+
+
+document
+    .getElementById("previewContextMenu")
+    .addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+
+            const actionRow =
+                event.target.closest(
+                    "[data-preview-action]"
+                );
+
+            if (actionRow && previewContextResource) {
+
+                previewPendingAction =
+                    actionRow.dataset.previewAction;
+
+                previewPendingWindowFeatures =
+                    previewPendingAction === "another-window"
+                        ? "width=1000,height=720,left=80,top=80"
+                        : "";
+
+                renderPreviewDurationStep(
+                    document.getElementById("previewContextMenu")
+                );
+
+                return;
+
+            }
+
+
+            const confirmButton =
+                event.target.closest("#previewDurationStepConfirm");
+
+            if (
+                confirmButton &&
+                previewContextResource &&
+                previewPendingAction
+            ) {
+
+                const sliderEl =
+                    document.getElementById("previewDurationStepSlider");
+
+                const durationSeconds =
+                    Number(sliderEl.value);
+
+                openTimedPreviewWindow(
+                    previewContextResource,
+                    previewPendingWindowFeatures,
+                    durationSeconds
+                );
+
+                previewContextResource = null;
+                previewPendingAction = null;
+                previewPendingWindowFeatures = null;
+
+                closeAllDropdowns();
+
+            }
+
+        }
+    );
 
 
 /* ============================================================
