@@ -1214,6 +1214,35 @@ h1 {
     cursor: pointer;
 }
 
+.export-expand-icon {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+
+    transition: transform .15s ease;
+}
+
+.export-expand-icon.expanded {
+    transform: rotate(90deg);
+}
+
+/* Collapsed by default; clicking the chevron reveals this nested
+   row without triggering the export action above it. */
+.export-sub-options {
+    max-height: 0;
+    overflow: hidden;
+
+    transition: max-height .2s ease;
+}
+
+.export-sub-options.expanded {
+    max-height: 40px;
+}
+
+.export-sub-row {
+    padding-left: 26px;
+}
+
 .inline-move-options {
     display: flex;
     flex-direction: column;
@@ -3484,8 +3513,35 @@ h1 {
                 type="button"
                 class="move-row"
                 id="exportBackupOption">
-                Export all resources
+
+                <svg
+                    class="export-expand-icon"
+                    id="exportExpandToggle"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3">
+
+                    <path d="M9 6l6 6-6 6"></path>
+
+                </svg>
+
+                <span>Export all resources</span>
+
             </button>
+
+            <div class="export-sub-options" id="exportSubOptions">
+
+                <label
+                    class="move-row settings-toggle-row export-sub-row"
+                    for="exportWithDateCreated">
+                    <span>With date created</span>
+                    <input
+                        type="checkbox"
+                        id="exportWithDateCreated">
+                </label>
+
+            </div>
 
         </div>
 
@@ -8840,20 +8896,42 @@ document
 
 function exportResourcesToExcel() {
 
+    const includeDateCreated =
+        document.getElementById("exportWithDateCreated").checked;
+
+    const header =
+        includeDateCreated
+            ? ["Category", "Name", "Date Created", "URL", "Tags", "Description"]
+            : ["Category", "Name", "URL", "Tags", "Description"];
+
     const rows =
         resources.map(
-            resource => ({
-                Category: resource.category,
-                Name: resource.name,
-                URL: resource.url,
-                Tags: resource.tags.join(", "),
-                Description: resource.description || ""
-            })
+            resource => {
+
+                const row = {
+                    Category: resource.category,
+                    Name: resource.name
+                };
+
+                if (includeDateCreated) {
+
+                    row["Date Created"] =
+                        formatDate(resource.createdAt);
+
+                }
+
+                row.URL = resource.url;
+                row.Tags = resource.tags.join(", ");
+                row.Description = resource.description || "";
+
+                return row;
+
+            }
         );
 
     const worksheet =
         XLSX.utils.json_to_sheet(rows, {
-            header: ["Category", "Name", "URL", "Tags", "Description"]
+            header
         });
 
     const workbook =
@@ -9982,6 +10060,42 @@ document
 
             closeAllDropdowns();
             exportResourcesToExcel();
+
+        }
+    );
+
+
+// Toggling this checkbox shouldn't close the Settings menu out from
+// under it — unlike the one-shot buttons above, this is a setting you
+// might want to flip and then still click "Export all resources".
+document
+    .getElementById("exportWithDateCreated")
+    .closest("label")
+    .addEventListener(
+        "click",
+        event => event.stopPropagation()
+    );
+
+
+// The chevron lives inside the "Export all resources" button so it
+// sits right before that label, but clicking it should only expand or
+// collapse the nested checkbox below — never fire the export itself or
+// close the Settings menu. Stopping propagation here keeps the click
+// from ever reaching the button's own listener above.
+document
+    .getElementById("exportExpandToggle")
+    .addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            const expanded =
+                event.currentTarget.classList.toggle("expanded");
+
+            document
+                .getElementById("exportSubOptions")
+                .classList.toggle("expanded", expanded);
 
         }
     );
