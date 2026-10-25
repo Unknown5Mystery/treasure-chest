@@ -1214,7 +1214,7 @@ h1 {
     cursor: pointer;
 }
 
-.export-expand-icon {
+.settings-expand-icon {
     width: 9px;
     height: 9px;
     flex-shrink: 0;
@@ -1222,24 +1222,24 @@ h1 {
     transition: transform .15s ease;
 }
 
-.export-expand-icon.expanded {
+.settings-expand-icon.expanded {
     transform: rotate(90deg);
 }
 
 /* Collapsed by default; clicking the chevron reveals this nested
-   row without triggering the export action above it. */
-.export-sub-options {
+   row without triggering the action on the row above it. */
+.settings-sub-options {
     max-height: 0;
     overflow: hidden;
 
     transition: max-height .2s ease;
 }
 
-.export-sub-options.expanded {
+.settings-sub-options.expanded {
     max-height: 40px;
 }
 
-.export-sub-row {
+.settings-sub-row {
     padding-left: 26px;
 }
 
@@ -1376,7 +1376,12 @@ h1 {
 
     padding: 5px;
 
-    background: #181918;
+    /* This floats over whatever field comes after it in the modal
+       (Description, usually), so it needs to actually read as a
+       panel sitting on top — the modal itself is #181918, and this
+       used to match that exactly, making the list all but invisible
+       and the field behind it ambiguously half-hidden. */
+    background: var(--surface-hover);
     border: 1px solid var(--border);
     border-radius: 9px;
 
@@ -1908,6 +1913,21 @@ h1 {
 
 .loading .import-spinner {
     display: inline-block;
+}
+
+/* This button sits on a light modal rather than the dark Settings
+   menu, so its loading state is just the spinner next to the label —
+   not the full yellow fill ".modal-button.loading" normally gets —
+   with the ring itself carrying the yellow accent instead. */
+#importResourcesFromAddModal.loading {
+    background: #ffffff;
+    color: var(--dark-text);
+    border-color: #ffffff;
+}
+
+#importResourcesFromAddModal .import-spinner {
+    border-color: rgba(22, 23, 21, 0.15);
+    border-top-color: var(--brand-yellow);
 }
 
 @keyframes importSpinnerSpin {
@@ -2761,6 +2781,21 @@ h1 {
     border-color: var(--brand-yellow);
 }
 
+/* A plain "back out of this" action shouldn't compete visually with
+   white's own brightness, so Cancel-style buttons get a muted gray
+   fill instead — closer to how .modal-close already reads. */
+.modal-button.cancel {
+    background: var(--surface-soft);
+    color: var(--muted);
+    border-color: var(--border);
+}
+
+.modal-button.cancel:hover {
+    background: var(--surface-hover);
+    color: var(--brand-yellow);
+    border-color: var(--border);
+}
+
 .modal-button.primary {
     background: #2f6b45;
     color: #d9f7e3;
@@ -3505,9 +3540,34 @@ h1 {
                 type="button"
                 class="move-row"
                 id="importBackupOption">
+
+                <svg
+                    class="settings-expand-icon"
+                    id="importExpandToggle"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3">
+
+                    <path d="M9 6l6 6-6 6"></path>
+
+                </svg>
+
                 <span class="import-spinner" aria-hidden="true"></span>
                 <span id="importBackupOptionLabel">Import a backup</span>
+
             </button>
+
+            <div class="settings-sub-options" id="importSubOptions">
+
+                <button
+                    type="button"
+                    class="move-row settings-sub-row"
+                    id="downloadBackupFormatOption">
+                    Download format
+                </button>
+
+            </div>
 
             <button
                 type="button"
@@ -3515,7 +3575,7 @@ h1 {
                 id="exportBackupOption">
 
                 <svg
-                    class="export-expand-icon"
+                    class="settings-expand-icon"
                     id="exportExpandToggle"
                     viewBox="0 0 24 24"
                     fill="none"
@@ -3530,10 +3590,10 @@ h1 {
 
             </button>
 
-            <div class="export-sub-options" id="exportSubOptions">
+            <div class="settings-sub-options" id="exportSubOptions">
 
                 <label
-                    class="move-row settings-toggle-row export-sub-row"
+                    class="move-row settings-toggle-row settings-sub-row"
                     for="exportWithDateCreated">
                     <span>With date created</span>
                     <input
@@ -4333,7 +4393,7 @@ h1 {
             <div class="modal-actions-right">
 
                 <button
-                    class="modal-button"
+                    class="modal-button cancel"
                     data-close-modal="editModal">
                     Cancel
                 </button>
@@ -4474,7 +4534,7 @@ h1 {
             <div class="modal-actions-right">
 
                 <button
-                    class="modal-button"
+                    class="modal-button cancel"
                     data-close-modal="editCategoryModal">
                     Cancel
                 </button>
@@ -4630,7 +4690,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 data-close-modal="categoryDragModal">
                 Cancel
             </button>
@@ -4840,7 +4900,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 id="confirmModalCancel"
                 data-close-modal="confirmModal">
                 Cancel
@@ -4956,7 +5016,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 data-close-modal="categoryPickerModal">
                 Cancel
             </button>
@@ -5168,16 +5228,28 @@ h1 {
         <div class="modal-actions modal-actions-split">
 
             <button
+                type="button"
                 class="modal-button"
-                data-close-modal="addResourceModal">
-                Cancel
+                id="importResourcesFromAddModal">
+                <span class="import-spinner" aria-hidden="true"></span>
+                Import resources
             </button>
 
-            <button
-                class="modal-button primary"
-                id="saveAddResource">
-                Add resource
-            </button>
+            <div class="modal-actions-right">
+
+                <button
+                    class="modal-button cancel"
+                    data-close-modal="addResourceModal">
+                    Cancel
+                </button>
+
+                <button
+                    class="modal-button primary"
+                    id="saveAddResource">
+                    Add resource
+                </button>
+
+            </div>
 
         </div>
 
@@ -5259,7 +5331,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 id="duplicateLinkCancel">
                 Cancel
             </button>
@@ -5456,7 +5528,7 @@ h1 {
         <div class="modal-actions">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 id="duplicateResourceCancel">
                 Cancel
             </button>
@@ -5559,7 +5631,7 @@ h1 {
             <div class="modal-actions-right">
 
                 <button
-                    class="modal-button"
+                    class="modal-button cancel"
                     data-close-modal="tagDetailModal">
                     Cancel
                 </button>
@@ -5683,7 +5755,7 @@ h1 {
         <div class="modal-actions modal-actions-split">
 
             <button
-                class="modal-button"
+                class="modal-button cancel"
                 data-close-modal="unusedModal">
                 Cancel
             </button>
@@ -10101,6 +10173,41 @@ document
     );
 
 
+// Same idea for the "Import a backup" row: its chevron reveals a
+// "Download format" option without triggering the import button it
+// lives inside of, and without closing the Settings menu.
+document
+    .getElementById("importExpandToggle")
+    .addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            const expanded =
+                event.currentTarget.classList.toggle("expanded");
+
+            document
+                .getElementById("importSubOptions")
+                .classList.toggle("expanded", expanded);
+
+        }
+    );
+
+
+document
+    .getElementById("downloadBackupFormatOption")
+    .addEventListener(
+        "click",
+        () => {
+
+            closeAllDropdowns();
+            downloadBlankBackupTemplate();
+
+        }
+    );
+
+
 
 let backupFilePickerSafetyTimer = null;
 let activeImportLoadingElements = [];
@@ -10178,6 +10285,39 @@ document
     );
 
 
+// "Import resources" inside the Add Resource modal is a shortcut
+// straight to the same backup-import flow, for anyone who opened Add
+// resource but actually has a whole file to bring in. It goes through
+// the same unsaved-changes guard as Cancel before giving up whatever
+// was typed into the form. Unlike Cancel, it doesn't close the popup
+// right away — it stays open with a loading spinner on the button
+// while the file picker is up, and only closes once that picker is
+// actually resolved, below (by choosing a file or dismissing it).
+document
+    .getElementById("importResourcesFromAddModal")
+    .addEventListener(
+        "click",
+        () => {
+
+            confirmDiscardIfDirty(
+                isAddResourceFormDirty,
+                () => {
+
+                    startImportLoading(
+                        document.getElementById("importResourcesFromAddModal")
+                    );
+
+                    document
+                        .getElementById("backupFileInput")
+                        .click();
+
+                }
+            );
+
+        }
+    );
+
+
 document
     .getElementById("backupFileInput")
     .addEventListener(
@@ -10189,7 +10329,25 @@ document
                     document.getElementById("importBackupOption")
                 );
 
+            const wasAddModalImport =
+                activeImportLoadingElements.includes(
+                    document.getElementById("importResourcesFromAddModal")
+                );
+
             stopImportLoading();
+
+            // Whether a file was actually picked or the dialog was
+            // dismissed, the Add Resource popup's job here is done —
+            // it only existed to offer this shortcut.
+            if (wasAddModalImport) {
+
+                document
+                    .getElementById("addResourceModal")
+                    .classList.remove("open");
+
+                reloadIfChestUpdatedElsewhere();
+
+            }
 
             const file =
                 event.target.files[0];
@@ -10216,7 +10374,22 @@ document
         "cancel",
         () => {
 
+            const wasAddModalImport =
+                activeImportLoadingElements.includes(
+                    document.getElementById("importResourcesFromAddModal")
+                );
+
             stopImportLoading();
+
+            if (wasAddModalImport) {
+
+                document
+                    .getElementById("addResourceModal")
+                    .classList.remove("open");
+
+                reloadIfChestUpdatedElsewhere();
+
+            }
 
         }
     );
